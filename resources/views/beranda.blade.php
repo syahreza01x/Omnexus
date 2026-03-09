@@ -273,6 +273,95 @@
         </div>
     </section>
 
+    {{-- Review Pengguna Terbaru --}}
+    <section class="bg-gray-50 dark:bg-gray-800/50 py-14">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Review Pengguna Terbaru</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Apa kata pelanggan kami tentang layanan Interco</p>
+            </div>
+            @php
+                $reviews = [
+                    ['name' => 'Andi Saputra', 'stars' => 5, 'desc' => 'Kualitas jahitan sangat rapi dan bahan yang digunakan benar-benar premium. Sangat puas dengan hasilnya!'],
+                    ['name' => 'Rina Wati', 'stars' => 4, 'desc' => 'Desain sesuai dengan yang saya minta. Pengiriman juga cepat. Recommended banget!'],
+                    ['name' => 'Budi Hartono', 'stars' => 5, 'desc' => 'Sudah 3 kali order di sini dan selalu konsisten kualitasnya. Harga juga sangat bersaing.'],
+                    ['name' => 'Siti Nurhaliza', 'stars' => 4, 'desc' => 'Proses konsultasi desainnya sangat membantu. Tim-nya ramah dan responsif.'],
+                    ['name' => 'Dimas Prasetyo', 'stars' => 5, 'desc' => 'Jaket varsity custom saya hasilnya keren banget! Teman-teman pada nanya beli di mana.'],
+                    ['name' => 'Maya Sari', 'stars' => 4, 'desc' => 'Bahan nyaman dipakai seharian. Bordir logonya juga detail dan presisi.'],
+                ];
+            @endphp
+            <div class="grid md:grid-cols-3 gap-6">
+                @foreach($reviews as $review)
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold text-sm">
+                                {{ strtoupper(substr($review['name'], 0, 1)) }}
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $review['name'] }}</h4>
+                                <div class="flex items-center gap-0.5 mt-0.5">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <svg class="w-4 h-4 {{ $i <= $review['stars'] ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600' }}" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                        </svg>
+                                    @endfor
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{{ $review['desc'] }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    {{-- Kritik dan Saran --}}
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div class="max-w-2xl mx-auto">
+            <div class="text-center mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Kritik dan Saran</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Bantu kami meningkatkan layanan dengan masukan Anda</p>
+            </div>
+            <form method="POST" action="#" class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 md:p-8 space-y-5" x-data="{ anonim: false }">
+                @csrf
+                {{-- Email --}}
+                <div>
+                    <label for="email_pengirim" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Pengirim</label>
+                    <input type="email" id="email_pengirim" name="email" required placeholder="contoh@email.com" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2.5 px-4 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                </div>
+
+                {{-- Username dengan toggle anonim --}}
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+                    <div class="flex items-center gap-3 mb-2">
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" name="anonim" x-model="anonim" class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 dark:bg-gray-700">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Kirim sebagai Anonim</span>
+                        </label>
+                    </div>
+                    <input type="text" id="username" name="username" placeholder="Nama tampilan Anda" x-bind:disabled="anonim" x-bind:class="anonim ? 'opacity-50 cursor-not-allowed' : ''" class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2.5 px-4 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                    <p x-show="anonim" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Nama Anda akan ditampilkan sebagai "Anonim"</p>
+                </div>
+
+                {{-- Komentar --}}
+                <div>
+                    <label for="komentar" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Komentar</label>
+                    <textarea id="komentar" name="komentar" rows="4" required placeholder="Tulis kritik atau saran Anda di sini..." class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2.5 px-4 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition resize-none"></textarea>
+                </div>
+
+                {{-- Submit --}}
+                <div class="text-right">
+                    <button type="submit" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-2.5 rounded-lg transition text-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
+                        </svg>
+                        Kirim
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
     {{-- Footer --}}
     <footer class="bg-gray-900 dark:bg-gray-950 text-gray-400">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
