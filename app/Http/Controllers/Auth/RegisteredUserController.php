@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -30,13 +31,28 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'username' => ['required_without:name', 'nullable', 'string', 'max:50', 'alpha_dash', 'unique:'.User::class.',name'],
+            'name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        $username = (string) $request->input('username', '');
+
+        if ($username === '') {
+            $username = Str::slug((string) $request->input('name', 'user'), '_');
+            $username = $username !== '' ? $username : 'user';
+
+            $base = $username;
+            $index = 1;
+            while (User::query()->where('name', $username)->exists()) {
+                $username = $base.'_'.$index;
+                $index++;
+            }
+        }
+
         $user = User::create([
-            'name' => $request->name,
+            'name' => $username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
@@ -45,6 +61,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('beranda', absolute: false));
     }
 }
