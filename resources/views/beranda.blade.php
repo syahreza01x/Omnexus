@@ -14,6 +14,13 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Ensure brand text is visible in light mode (override accidental low-opacity rules) */
+        html:not(.dark) nav .brand {
+            color: #111827 !important;
+            opacity: 1 !important;
+        }
+    </style>
 </head>
 <body class="font-sans antialiased bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
 
@@ -22,9 +29,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 {{-- Logo --}}
-                <a href="/" class="flex items-center gap-2 text-xl font-bold text-purple-600 dark:text-purple-400">
+                <a href="/" class="flex items-center gap-2">
                     <img src="{{ asset('images/icon.png') }}" alt="Interco" class="h-8 w-8 object-contain">
-                    Interco
+                    <span class="brand text-xl font-bold text-gray-900 dark:text-white">Interco</span>
                 </a>
 
                 {{-- Search Bar --}}
@@ -93,7 +100,7 @@
                 <div>
                     <span class="inline-block px-3 py-1 text-xs font-semibold tracking-wider uppercase bg-white/10 border border-white/20 rounded-full mb-6">Custom Order</span>
                     <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">
-                        Wujudkan <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Pakaian Impian</span> Anda
+                        Wujudkan <span class="text-purple-600 dark:text-purple-300">Pakaian Impian</span> Anda
                     </h1>
                     <p class="text-lg text-gray-300 mb-8 leading-relaxed">
                         Desain pakaian custom sesuai keinginan Anda. Dari bahan, warna, hingga detail jahitan — semua bisa disesuaikan.
@@ -115,13 +122,13 @@
                 </div>
                 <div class="hidden md:flex justify-center">
                     <div class="relative">
-                        <div class="w-72 h-72 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+                        <div class="w-72 h-72 rounded-full bg-gradient-to-br from-purple-800/10 to-indigo-700/8 flex items-center justify-center">
                             <svg class="w-40 h-40 text-white/80" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
                             </svg>
                         </div>
-                        <div class="absolute -top-2 -right-2 w-16 h-16 bg-purple-500/30 rounded-full blur-xl"></div>
-                        <div class="absolute -bottom-4 -left-4 w-20 h-20 bg-pink-500/30 rounded-full blur-xl"></div>
+                        <div class="absolute -top-2 -right-2 w-16 h-16 bg-purple-800/12 rounded-full blur-xl"></div>
+                        <div class="absolute -bottom-4 -left-4 w-20 h-20 bg-indigo-700/10 rounded-full blur-xl"></div>
                     </div>
                 </div>
             </div>
