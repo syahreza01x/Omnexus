@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use App\Models\Product;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -11,12 +12,36 @@ Route::get('/', function () {
         ->take(8)
         ->get();
 
-    return view('beranda', compact('products'));
+    $cart = session('cart', []);
+    $cartProducts = collect();
+    $cartCount = 0;
+    $cartSubtotal = 0;
+
+    if (! empty($cart)) {
+        $cartProducts = Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
+        $cartCount = collect($cart)->sum('quantity');
+        $cartSubtotal = collect($cart)->reduce(function ($carry, $item, $productId) use ($cartProducts) {
+            $product = $cartProducts->get((int) $productId);
+
+            if (! $product) {
+                return $carry;
+            }
+
+            return $carry + ((int) $item['quantity'] * (int) $product->price);
+        }, 0);
+    }
+
+    return view('beranda', compact('products', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal'));
 })->name('beranda');
 
 Route::get('/dashboard', function () {
     return redirect()->route('beranda');
 })->middleware(['auth'])->name('dashboard');
+
+Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
+Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
