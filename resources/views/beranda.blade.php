@@ -209,34 +209,20 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </a>
             </div>
-            @php
-                $products = [
-                    ['name' => 'Kemeja Flannel Custom', 'desc' => 'Bahan premium, desain bebas pilih', 'price' => 185000, 'badge' => 'Best Seller'],
-                    ['name' => 'Outer Hoodie Oversize', 'desc' => 'Fleece tebal, sablon & bordir', 'price' => 220000, 'badge' => 'New'],
-                    ['name' => 'Rompi Kerja Formal', 'desc' => 'Cutting presisi, bahan kantor', 'price' => 165000, 'badge' => null],
-                    ['name' => 'Kaos Polos Custom', 'desc' => 'Cotton combed 30s, warna bebas', 'price' => 95000, 'badge' => 'Populer'],
-                    ['name' => 'Jaket Varsity Custom', 'desc' => 'Kombinasi fleece & parasut', 'price' => 275000, 'badge' => null],
-                    ['name' => 'Kemeja Batik Modern', 'desc' => 'Motif custom, slim fit', 'price' => 210000, 'badge' => 'New'],
-                    ['name' => 'Aksesoris Topi Bucket', 'desc' => 'Bordir custom logo & teks', 'price' => 75000, 'badge' => null],
-                    ['name' => 'Outer Parka Custom', 'desc' => 'Waterproof, desain bebas', 'price' => 310000, 'badge' => 'Premium'],
-                ];
-            @endphp
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                @foreach($products as $product)
+                @forelse($products as $product)
                     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-lg transition-all duration-300 overflow-hidden group">
                         <div class="relative aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                            @if($product['badge'])
-                                <span class="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900">{{ $product['badge'] }}</span>
+                            @if($product->category)
+                                <span class="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900">{{ $product->category }}</span>
                             @endif
-                            <svg class="w-16 h-16 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
+                            <img src="{{ asset($product->image_path ?: 'images/items/1.png') }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
                         </div>
                         <div class="p-4">
-                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1 group-hover:text-gray-900 dark:group-hover:text-white transition">{{ $product['name'] }}</h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ $product['desc'] }}</p>
+                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1 group-hover:text-gray-900 dark:group-hover:text-white transition">{{ $product->name }}</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ $product->description }}</p>
                             <div class="flex items-center justify-between">
-                                <p class="text-base font-bold text-gray-900 dark:text-white">Rp {{ number_format($product['price'], 0, ',', '.') }}</p>
+                                <p class="text-base font-bold text-gray-900 dark:text-white">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
                                 <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-white text-gray-600 dark:text-gray-400 hover:text-white dark:hover:text-gray-900 transition-all duration-300">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
@@ -245,7 +231,11 @@
                             </div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-span-full rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                        Belum ada produk yang aktif.
+                    </div>
+                @endforelse
             </div>
         </div>
     </section>

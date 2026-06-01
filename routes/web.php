@@ -1,10 +1,17 @@
 <?php
 
+use App\Models\Product;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('beranda');
+    $products = Product::query()
+        ->where('is_active', true)
+        ->latest()
+        ->take(8)
+        ->get();
+
+    return view('beranda', compact('products'));
 })->name('beranda');
 
 Route::get('/dashboard', function () {
