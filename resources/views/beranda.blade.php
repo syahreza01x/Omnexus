@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', productModalOpen: false, cartOpen: false, selectedProduct: null }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,6 +19,10 @@
         html:not(.dark) nav .brand {
             color: #111827 !important;
             opacity: 1 !important;
+        }
+
+        [x-cloak] {
+            display: none !important;
         }
     </style>
 </head>
@@ -58,13 +62,16 @@
                         </svg>
                     </button>
 
-                    @auth
-                        <a href="#" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600" title="Keranjang">
+                    <button type="button" @click="productModalOpen = false; cartOpen = true" class="relative flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-gray-700 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600" title="Keranjang">
+                        @if($cartCount > 0)
+                            <span class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-purple-600 px-1 text-[10px] font-bold text-white">{{ $cartCount }}</span>
+                        @endif
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
                             </svg>
-                        </a>
+                    </button>
 
+                    @auth
                         {{-- User icon dropdown --}}
                         <div x-data="{ open: false }" class="relative">
                             <button @click="open = !open" class="flex items-center justify-center w-9 h-9 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800 transition">
@@ -209,35 +216,43 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </a>
             </div>
-            @php
-                $products = [
-                    ['name' => 'Kemeja Flannel Custom', 'desc' => 'Bahan premium, desain bebas pilih', 'price' => 185000, 'badge' => 'Best Seller'],
-                    ['name' => 'Outer Hoodie Oversize', 'desc' => 'Fleece tebal, sablon & bordir', 'price' => 220000, 'badge' => 'New'],
-                    ['name' => 'Rompi Kerja Formal', 'desc' => 'Cutting presisi, bahan kantor', 'price' => 165000, 'badge' => null],
-                    ['name' => 'Kaos Polos Custom', 'desc' => 'Cotton combed 30s, warna bebas', 'price' => 95000, 'badge' => 'Populer'],
-                    ['name' => 'Jaket Varsity Custom', 'desc' => 'Kombinasi fleece & parasut', 'price' => 275000, 'badge' => null],
-                    ['name' => 'Kemeja Batik Modern', 'desc' => 'Motif custom, slim fit', 'price' => 210000, 'badge' => 'New'],
-                    ['name' => 'Aksesoris Topi Bucket', 'desc' => 'Bordir custom logo & teks', 'price' => 75000, 'badge' => null],
-                    ['name' => 'Outer Parka Custom', 'desc' => 'Waterproof, desain bebas', 'price' => 310000, 'badge' => 'Premium'],
-                ];
-            @endphp
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                @foreach($products as $product)
-                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-lg transition-all duration-300 overflow-hidden group">
+                @forelse($products as $product)
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer" @click="cartOpen = false; selectedProduct = {{ \Illuminate\Support\Js::from([
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'description' => $product->description,
+                        'price' => (int) $product->price,
+                        'price_formatted' => 'Rp ' . number_format($product->price, 0, ',', '.'),
+                        'image' => asset($product->image_path ?: 'images/items/1.png'),
+                        'category' => $product->category,
+                        'specifications' => $product->specifications,
+                        'stock' => $product->stock,
+                        'unit' => $product->unit,
+                    ]) }}; productModalOpen = true">
                         <div class="relative aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                            @if($product['badge'])
-                                <span class="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900">{{ $product['badge'] }}</span>
+                            @if($product->category)
+                                <span class="absolute top-3 left-3 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900">{{ $product->category }}</span>
                             @endif
-                            <svg class="w-16 h-16 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
+                            <img src="{{ asset($product->image_path ?: 'images/items/1.png') }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
                         </div>
                         <div class="p-4">
-                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1 group-hover:text-gray-900 dark:group-hover:text-white transition">{{ $product['name'] }}</h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ $product['desc'] }}</p>
+                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1 group-hover:text-gray-900 dark:group-hover:text-white transition">{{ $product->name }}</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ $product->description }}</p>
                             <div class="flex items-center justify-between">
-                                <p class="text-base font-bold text-gray-900 dark:text-white">Rp {{ number_format($product['price'], 0, ',', '.') }}</p>
-                                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-white text-gray-600 dark:text-gray-400 hover:text-white dark:hover:text-gray-900 transition-all duration-300">
+                                <p class="text-base font-bold text-gray-900 dark:text-white">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
+                                <button type="button" @click.stop="cartOpen = false; selectedProduct = {{ \Illuminate\Support\Js::from([
+                                    'id' => $product->id,
+                                    'name' => $product->name,
+                                    'description' => $product->description,
+                                    'price' => (int) $product->price,
+                                    'price_formatted' => 'Rp ' . number_format($product->price, 0, ',', '.'),
+                                    'image' => asset($product->image_path ?: 'images/items/1.png'),
+                                    'category' => $product->category,
+                                    'specifications' => $product->specifications,
+                                    'stock' => $product->stock,
+                                    'unit' => $product->unit,
+                                ]) }}; productModalOpen = true" class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-900 dark:hover:bg-white text-gray-700 dark:text-gray-300 hover:text-white dark:hover:text-gray-900 transition-all duration-300">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
                                     </svg>
@@ -245,7 +260,11 @@
                             </div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-span-full rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                        Belum ada produk yang aktif.
+                    </div>
+                @endforelse
             </div>
         </div>
     </section>
@@ -284,6 +303,130 @@
             </div>
         </div>
     </section>
+
+    {{-- Product detail modal --}}
+    <div x-cloak x-show="productModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60" @click="productModalOpen = false"></div>
+        <div class="relative w-full max-w-4xl overflow-hidden rounded-3xl bg-white dark:bg-gray-900 shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
+            <button type="button" @click="productModalOpen = false" class="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-lg transition hover:bg-white dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <div class="grid md:grid-cols-2">
+                <div class="aspect-square bg-gray-100 dark:bg-gray-800">
+                    <img x-bind:src="selectedProduct?.image" x-bind:alt="selectedProduct?.name" class="h-full w-full object-cover">
+                </div>
+                <div class="p-6 md:p-8">
+                    <div class="mb-4 flex items-center gap-2">
+                        <span class="rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-900 dark:text-purple-200" x-text="selectedProduct?.category || 'Produk'"></span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400" x-text="selectedProduct ? `${selectedProduct.stock} stok tersedia` : ''"></span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white" x-text="selectedProduct?.name"></h3>
+                    <p class="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300" x-text="selectedProduct?.description"></p>
+
+                    <div class="mt-6 grid grid-cols-2 gap-3 text-sm">
+                        <div class="rounded-2xl bg-gray-50 p-4 dark:bg-gray-800">
+                            <div class="text-gray-500 dark:text-gray-400">Harga</div>
+                            <div class="mt-1 font-bold text-gray-900 dark:text-white" x-text="selectedProduct?.price_formatted"></div>
+                        </div>
+                        <div class="rounded-2xl bg-gray-50 p-4 dark:bg-gray-800">
+                            <div class="text-gray-500 dark:text-gray-400">Satuan</div>
+                            <div class="mt-1 font-bold text-gray-900 dark:text-white" x-text="selectedProduct?.unit"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                        <div class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Detail</div>
+                        <p class="mt-2 text-sm text-gray-700 dark:text-gray-300" x-text="selectedProduct?.specifications || 'Belum ada spesifikasi tambahan.'"></p>
+                    </div>
+
+                    <form method="POST" action="{{ route('cart.add') }}" class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end">
+                        @csrf
+                        <input type="hidden" name="product_id" x-bind:value="selectedProduct?.id">
+                        <div class="w-full sm:w-24">
+                            <label class="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Qty</label>
+                            <input type="number" name="quantity" min="1" value="1" class="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200">
+                        </div>
+                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-700">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
+                            </svg>
+                            Masukkan ke Keranjang
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Cart drawer --}}
+    <div x-cloak x-show="cartOpen" class="fixed inset-0 z-50">
+        <div class="absolute inset-0 bg-black/50" @click="cartOpen = false"></div>
+        <div class="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto bg-white shadow-2xl dark:bg-gray-900">
+            <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Keranjang</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $cartCount }} item</p>
+                </div>
+                <button type="button" @click="cartOpen = false" class="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                @forelse($cart as $cartItem)
+                    @php
+                        $cartProduct = $cartProducts->get((int) $cartItem['product_id']);
+                    @endphp
+
+                    @if($cartProduct)
+                        <div class="flex gap-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                            <img src="{{ asset($cartProduct->image_path ?: 'images/items/1.png') }}" alt="{{ $cartProduct->name }}" class="h-20 w-20 rounded-xl object-cover">
+                            <div class="min-w-0 flex-1">
+                                <h4 class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $cartProduct->name }}</h4>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Rp {{ number_format($cartProduct->price, 0, ',', '.') }}</p>
+                                <div class="mt-3 flex items-center gap-2">
+                                    <form method="POST" action="{{ route('cart.update', $cartProduct) }}" class="flex items-center gap-2">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="number" name="quantity" min="1" value="{{ $cartItem['quantity'] }}" class="w-16 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-800 focus:border-purple-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200">
+                                        <button type="submit" class="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">Update</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('cart.remove', $cartProduct) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">Hapus</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @empty
+                    <div class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-400">
+                        Keranjang masih kosong.
+                    </div>
+                @endforelse
+
+                <div class="rounded-2xl bg-gray-50 p-4 dark:bg-gray-800">
+                    <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                        <span>Subtotal</span>
+                        <span class="font-semibold text-gray-900 dark:text-white">Rp {{ number_format($cartSubtotal, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="mt-4 flex items-center gap-3">
+                        <button type="button" @click="cartOpen = false" class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">Lanjut Belanja</button>
+                        <form method="POST" action="{{ route('cart.clear') }}">
+                            @csrf
+                            <button type="submit" class="rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">Kosongkan</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- Review Pengguna Terbaru --}}
     <section class="bg-gray-50 dark:bg-gray-800/50 py-14">
