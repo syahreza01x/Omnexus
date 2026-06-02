@@ -5,14 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Profil - Interco</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        html:not(.dark) nav .brand {
+            color: #111827 !important;
+            opacity: 1 !important;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 </head>
 <body class="font-sans antialiased bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
     <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-100 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <a href="{{ route('beranda') }}" class="flex items-center gap-2 text-xl font-bold text-purple-600 dark:text-purple-400">
+                <a href="{{ route('beranda') }}" class="flex items-center gap-2">
                     <img src="{{ asset('images/icon.png') }}" alt="Interco" class="h-8 w-8 object-contain">
-                    Interco
+                    <span class="brand text-xl font-bold text-gray-900 dark:text-white">Interco</span>
                 </a>
 
                 <div class="flex items-center gap-3">
@@ -38,10 +48,10 @@
                             </svg>
                         </button>
                         <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Profil</a>
+                            <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white">Profil</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Keluar</button>
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white">Keluar</button>
                             </form>
                         </div>
                     </div>
