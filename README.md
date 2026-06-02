@@ -145,8 +145,8 @@ GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
 
 **Contoh:**
 ```env
-GOOGLE_CLIENT_ID=959653117964-27v62nr2c55tocholuf35ug9s11c1hj1.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
+GOOGLE_CLIENT_ID=177013-testing.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-OmnexusTesting123
 GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
 ```
 
