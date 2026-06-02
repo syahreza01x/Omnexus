@@ -65,7 +65,7 @@ php artisan key:generate
 
 **Buat database MySQL baru:**
 ```sql
-CREATE DATABASE PBL;
+CREATE DATABASE Omnexus;
 ```
 
 **Update `.env` dengan credentials database Anda:**
@@ -73,7 +73,7 @@ CREATE DATABASE PBL;
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=PBL
+DB_DATABASE=Omnexus
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -278,7 +278,7 @@ Omnexus/
 |----------|---------|-----------|
 | `APP_NAME` | Interco | Nama aplikasi |
 | `APP_URL` | http://localhost:8000 | URL aplikasi (ubah untuk production) |
-| `DB_DATABASE` | PBL | Nama database MySQL |
+| `DB_DATABASE` | Omnexus | Nama database MySQL |
 | `GOOGLE_CLIENT_ID` | - | **REQUIRED** - dari Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | - | **REQUIRED** - dari Google Cloud Console |
 | `SESSION_DRIVER` | cookie | Driver session (cookie atau database) |
