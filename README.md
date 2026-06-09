@@ -124,7 +124,7 @@ php artisan storage:link
    - Name: `Omnexus Local` (atau production)
    - **Authorized redirect URIs**: Tambahkan:
      ```
-     http://localhost:8000/auth/google/callback
+     http://127.0.0.1:8000/auth/google/callback
      ```
      (Untuk production: `https://yourdomain.com/auth/google/callback`)
    - Klik **Create**
@@ -140,14 +140,14 @@ Buka file `.env` dan isi bagian Google:
 ```env
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
-GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
 ```
 
 **Contoh:**
 ```env
-GOOGLE_CLIENT_ID=959653117964-27v62nr2c55tocholuf35ug9s11c1hj1.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
-GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+GOOGLE_CLIENT_ID=177013-testing.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-OmnexusTesting123
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
 ```
 
 ### C. Clear Cache
@@ -168,14 +168,14 @@ php artisan config:clear
 ```bash
 php artisan serve
 ```
-Server akan jalan di `http://localhost:8000`
+Server akan jalan di `http://127.0.0.1:8000`
 
 **Terminal 2 — Jalankan Vite (CSS/JS bundler):**
 ```bash
 npm run dev
 ```
 
-Sekarang akses [http://localhost:8000](http://localhost:8000) di browser.
+Sekarang akses [http://127.0.0.1:8000](http://127.0.0.1:8000) di browser.
 
 ### Build untuk Production
 
@@ -246,7 +246,7 @@ Omnexus/
 
 **Solusi:**
 - Clear route cache: `php artisan route:clear`
-- Pastikan `APP_URL` di `.env` sesuai (misal: `http://localhost:8000`)
+- Pastikan `APP_URL` di `.env` sesuai (misal: `http://127.0.0.1:8000`)
 - Restart `php artisan serve`
 
 ### Error: "InvalidStateException" dari Google
@@ -277,7 +277,7 @@ Omnexus/
 | Variable | Default | Keterangan |
 |----------|---------|-----------|
 | `APP_NAME` | Interco | Nama aplikasi |
-| `APP_URL` | http://localhost:8000 | URL aplikasi (ubah untuk production) |
+| `APP_URL` | http://127.0.0.1:8000 | URL aplikasi (ubah untuk production) |
 | `DB_DATABASE` | Omnexus | Nama database MySQL |
 | `GOOGLE_CLIENT_ID` | - | **REQUIRED** - dari Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | - | **REQUIRED** - dari Google Cloud Console |
