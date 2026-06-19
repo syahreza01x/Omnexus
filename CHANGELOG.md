@@ -2,6 +2,16 @@
 
 Semua catatan perubahan pada proyek ini akan didokumentasikan di file ini.
 
+## Planned - Version 1.1.0
+
+### Changed
+- Revisi seluruh bagian desain seperti ikon dan layout antarmuka untuk meningkatkan UI/UX tanpa menghilangkan struktur desain awal.
+
+### Impacted Modules
+- View
+- Styling (Tailwind/CSS)
+
+
 ## v1.0.0
 
 ### Added
