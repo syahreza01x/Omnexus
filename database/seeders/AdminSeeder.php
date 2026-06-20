@@ -132,9 +132,9 @@ class AdminSeeder extends Seeder
         }
 
         // Create Sample Transactions
-        $product1 = Product::query()->where('sku', '=', 'KAIN-001', 'and')->firstOrFail();
-        $product2 = Product::query()->where('sku', '=', 'KOPI-001', 'and')->firstOrFail();
-        $product3 = Product::query()->where('sku', '=', 'OIL-001', 'and')->firstOrFail();
+        $product1 = Product::query()->where('sku', '=', 'KAIN-001')->first();
+        $product2 = Product::query()->where('sku', '=', 'KOPI-001')->first();
+        $product3 = Product::query()->where('sku', '=', 'OIL-001')->first();
 
         // Transaction 1: Pending
         $transaction1 = Transaction::create([
