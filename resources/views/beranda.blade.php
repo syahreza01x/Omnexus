@@ -1456,113 +1456,172 @@
     </footer>
 
     {{-- ─── Chatbot FAQ Widget ─── --}}
-    <div x-data="chatbot({{ auth()->check() ? 'true' : 'false' }})" class="fixed inset-0 z-[900] pointer-events-none font-sans flex items-center justify-center">
+    <div x-data="chatbot({{ auth()->check() ? 'true' : 'false' }})" class="fixed inset-0 z-[900] pointer-events-none font-sans flex items-end justify-end">
         {{-- Overlay Backdrop --}}
-        <div x-show="open" x-transition.opacity class="absolute inset-0 bg-black/50 pointer-events-auto" @click="open = false"></div>
+        <div x-show="open" x-transition.opacity class="absolute inset-0 bg-black/40 backdrop-blur-sm pointer-events-auto" @click="open = false"></div>
 
         {{-- Chat Window --}}
         <div x-show="open" x-cloak
              x-transition:enter="transition ease-out duration-300 transform"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
              x-transition:leave="transition ease-in duration-200 transform"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95"
-             class="relative w-[95vw] md:w-[75vw] lg:w-[900px] h-[85vh] bg-white dark:bg-zinc-900 shadow-2xl rounded-2xl overflow-hidden flex flex-col pointer-events-auto">
-             
-            {{-- Header --}}
-            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white flex justify-between items-center shadow-md z-10">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative font-bold text-lg">
-                        CS
-                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-indigo-600 rounded-full"></div>
+             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+             x-transition:leave-end="opacity-0 translate-y-8 scale-95"
+             class="relative mb-20 mr-4 w-[92vw] sm:w-[400px] h-[75vh] max-h-[680px] bg-white dark:bg-zinc-900 shadow-2xl rounded-3xl overflow-hidden flex flex-col pointer-events-auto"
+             style="box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.05);">
+
+            {{-- Header - Warm & Humanistic --}}
+            <div style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%); padding: 16px 16px 20px; position: relative; overflow: hidden;">
+                {{-- Decorative circles --}}
+                <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.06);"></div>
+                <div style="position: absolute; bottom: -30px; right: 40px; width: 70px; height: 70px; border-radius: 50%; background: rgba(255,255,255,0.04);"></div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        {{-- Avatar with logo --}}
+                        <div style="position: relative; flex-shrink: 0;">
+                            <div style="width: 46px; height: 46px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); overflow: hidden;">
+                                <img src="{{ asset('images/icon.png') }}" alt="CS" style="width: 28px; height: 28px; object-fit: contain;">
+                            </div>
+                            {{-- Online indicator --}}
+                            <div style="position: absolute; bottom: 1px; right: 1px; width: 12px; height: 12px; background: #22c55e; border: 2px solid #6d28d9; border-radius: 50%;"></div>
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <h4 style="color: white; font-weight: 700; font-size: 0.95rem; line-height: 1.2;">CS Interco</h4>
+                                <span style="background: rgba(255,255,255,0.2); color: white; font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 99px; letter-spacing: 0.05em;">AI</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px; margin-top: 2px;">
+                                <div style="width: 6px; height: 6px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                                <p style="color: rgba(255,255,255,0.8); font-size: 0.72rem;">Online sekarang · siap membantu 😊</p>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="font-bold text-sm leading-tight">Interco CS</h4>
-                        <p class="text-[10px] text-purple-100 uppercase tracking-wider">Selalu Online</p>
-                    </div>
+                    <button @click="open = false" style="width: 32px; height: 32px; background: rgba(255,255,255,0.15); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; color: white;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
                 </div>
-                <button @click="open = false" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+
+                {{-- Info bar --}}
+                <div style="margin-top: 14px; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; position: relative; z-index: 1;">
+                    <svg style="width: 16px; height: 16px; color: #fde68a; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+                    <p style="color: rgba(255,255,255,0.9); font-size: 0.72rem; line-height: 1.4;">Biasanya membalas dalam hitungan detik. Ajukan pertanyaan apa saja seputar produk & layanan kami!</p>
+                </div>
             </div>
 
             {{-- Body --}}
-            <div class="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-zinc-950 space-y-4" id="chat-messages">
+            <div class="flex-1 overflow-y-auto bg-gray-50 dark:bg-zinc-950" id="chat-messages" style="padding: 16px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth;">
                 <template x-for="(msg, index) in messages" :key="index">
-                    <div :class="msg.type === 'bot' ? 'flex items-start gap-2.5' : 'flex items-start gap-2.5 flex-row-reverse'">
-                        <div x-show="msg.type === 'bot'" class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex-shrink-0 flex items-center justify-center">
-                            <span class="text-indigo-600 dark:text-indigo-400 text-xs font-bold">CS</span>
+                    <div :class="msg.type === 'bot' ? 'flex items-end gap-2' : 'flex items-end gap-2 flex-row-reverse'">
+                        {{-- Bot avatar --}}
+                        <div x-show="msg.type === 'bot'" style="width: 30px; height: 30px; border-radius: 50%; background: white; border: 2px solid #ede9fe; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-bottom: 4px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
+                            <img src="{{ asset('images/icon.png') }}" style="width: 18px; height: 18px; object-fit: contain;">
                         </div>
-                        <div :class="msg.type === 'bot' ? 'bg-white dark:bg-zinc-800 border border-gray-100 dark:border-gray-700 rounded-2xl rounded-tl-sm text-gray-700 dark:text-gray-300' : 'bg-indigo-600 text-white rounded-2xl rounded-tr-sm'" class="p-3 max-w-[80%] shadow-sm text-sm relative group">
+
+                        <div :class="msg.type === 'bot' ? 'max-w-[78%]' : 'max-w-[78%]'" style="display: flex; flex-direction: column; gap: 4px;">
+                            {{-- Sender name (bot only) --}}
+                            <span x-show="msg.type === 'bot'" style="font-size: 0.65rem; font-weight: 700; color: #7c3aed; margin-left: 2px;">CS Interco</span>
+
+                            {{-- Product card context (user bubble) --}}
                             <template x-if="msg.product">
-                                <div class="mb-2 bg-white/20 border border-white/30 rounded-lg p-2 flex gap-2 cursor-pointer hover:bg-white/30 transition-colors" @click="selectedProduct = msg.product; productModalOpen = true">
-                                    <img :src="msg.product.image" class="w-12 h-12 rounded object-cover flex-shrink-0">
-                                    <div class="flex-1 min-w-0 flex flex-col justify-center">
-                                        <div class="text-xs font-bold truncate text-white" x-text="msg.product.name"></div>
-                                        <div class="text-[0.65rem] text-white/90" x-text="msg.product.price_formatted"></div>
+                                <div :class="msg.type === 'user' ? 'bg-indigo-500' : 'bg-white dark:bg-zinc-800'" style="border-radius: 14px; padding: 8px; display: flex; gap: 10px; cursor: pointer; margin-bottom: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1px solid rgba(124,58,237,0.15);" @click="selectedProduct = msg.product; productModalOpen = true">
+                                    <img :src="msg.product.image" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0;">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 0.75rem; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" :style="msg.type === 'user' ? 'color:white' : 'color: var(--text)'" x-text="msg.product.name"></div>
+                                        <div style="font-size: 0.68rem; font-weight: 600; margin-top: 1px;" :style="msg.type === 'user' ? 'color: rgba(255,255,255,0.8)' : 'color: #7c3aed'" x-text="msg.product.price_formatted"></div>
                                     </div>
                                 </div>
                             </template>
-                            <p x-html="msg.text" class="leading-relaxed whitespace-pre-wrap"></p>
+
+                            {{-- Bubble --}}
+                            <div :style="msg.type === 'bot'
+                                ? 'background: white; color: #1f2937; border-radius: 4px 18px 18px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border: 1px solid #f3f4f6;'
+                                : 'background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border-radius: 18px 4px 18px 18px; box-shadow: 0 2px 8px rgba(124,58,237,0.35);'"
+                                style="padding: 10px 14px;" class="dark:border-gray-700">
+                                <p x-html="msg.text" style="font-size: 0.84rem; line-height: 1.6; margin: 0;"></p>
+                            </div>
+
+                            {{-- Timestamp --}}
+                            <span style="font-size: 0.62rem; color: #9ca3af; margin: 0 4px;" :style="msg.type === 'user' ? 'text-align: right;' : ''" x-text="msg.time"></span>
                         </div>
                     </div>
                 </template>
 
-                <div x-show="isTyping" class="flex items-start gap-2.5">
-                    <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex-shrink-0 flex items-center justify-center">
-                        <span class="text-indigo-600 dark:text-indigo-400 text-xs font-bold">CS</span>
+                {{-- Typing indicator --}}
+                <div x-show="isTyping" class="flex items-end gap-2">
+                    <div style="width: 30px; height: 30px; border-radius: 50%; background: white; border: 2px solid #ede9fe; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;">
+                        <img src="{{ asset('images/icon.png') }}" style="width: 18px; height: 18px; object-fit: contain;">
                     </div>
-                    <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-gray-700 rounded-2xl rounded-tl-sm p-4 flex items-center gap-1.5 shadow-sm max-w-[80%]">
-                        <div class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 0s;"></div>
-                        <div class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 0.2s;"></div>
-                        <div class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 0.4s;"></div>
+                    <div style="background: white; border-radius: 4px 18px 18px 18px; padding: 12px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); border: 1px solid #f3f4f6; display: flex; align-items: center; gap: 5px;">
+                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #a78bfa; animation: bounce 1.2s infinite;" ></div>
+                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #a78bfa; animation: bounce 1.2s infinite 0.2s;"></div>
+                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #a78bfa; animation: bounce 1.2s infinite 0.4s;"></div>
                     </div>
+                </div>
+
+                {{-- Quick reply suggestions (only shown at start) --}}
+                <div x-show="messages.length === 1 && !isTyping" class="flex flex-wrap gap-2 mt-2">
+                    <p style="width: 100%; font-size: 0.7rem; color: #9ca3af; font-weight: 600; margin-bottom: 4px;">💡 Pertanyaan populer:</p>
+                    <template x-for="q in quickReplies" :key="q">
+                        <button @click="quickSend(q)" style="background: white; border: 1px solid #e9d5ff; color: #7c3aed; font-size: 0.75rem; font-weight: 600; padding: 6px 14px; border-radius: 99px; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06);" onmouseover="this.style.background='#7c3aed'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#7c3aed'" x-text="q"></button>
+                    </template>
                 </div>
             </div>
 
-            {{-- FAQ Options / Text Input --}}
-            <div class="p-4 bg-white dark:bg-zinc-900 border-t border-gray-100 dark:border-gray-800 z-10 flex flex-col gap-3">
+            {{-- Footer --}}
+            <div style="padding: 12px 16px; background: white; border-top: 1px solid #f3f4f6; flex-shrink: 0;" class="dark:bg-zinc-900 dark:border-zinc-800">
                 {{-- Product Context Preview --}}
-                <div x-show="productContext" x-transition class="relative flex items-center gap-3 p-2.5 border border-indigo-100 bg-indigo-50/50 rounded-xl dark:border-indigo-900/30 dark:bg-indigo-900/10">
-                    <button @click="productContext = null" type="button" class="absolute -top-2 -right-2 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 shadow-sm transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                <div x-show="productContext" x-transition style="margin-bottom: 10px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 12px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; position: relative;">
+                    <button @click="productContext = null" style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; background: white; border: 1px solid #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #6b7280; box-shadow: 0 1px 4px rgba(0,0,0,0.1);">
+                        <svg style="width: 11px; height: 11px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
-                    <img :src="productContext?.image" class="w-10 h-10 object-cover rounded-lg flex-shrink-0 border border-gray-200">
-                    <div class="flex-1 min-w-0">
-                        <div class="text-[0.75rem] font-bold text-gray-900 dark:text-white truncate leading-tight" x-text="productContext?.name"></div>
-                        <div class="text-[0.7rem] text-indigo-600 font-bold mt-0.5" x-text="productContext?.price_formatted"></div>
+                    <img :src="productContext?.image" style="width: 36px; height: 36px; object-fit: cover; border-radius: 8px; flex-shrink: 0; border: 1px solid #e9d5ff;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 0.72rem; font-weight: 700; color: #1f2937; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" x-text="productContext?.name"></div>
+                        <div style="font-size: 0.68rem; color: #7c3aed; font-weight: 600;" x-text="productContext?.price_formatted"></div>
                     </div>
+                    <svg style="width: 14px; height: 14px; color: #7c3aed; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                 </div>
 
-                <form @submit.prevent="sendMessage" class="flex gap-2 relative">
-                    <input id="chat-input" type="text" x-model="userInput" placeholder="Ketik pesan disini..." 
-                           class="w-full bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-gray-700 text-sm rounded-full py-2.5 pl-4 pr-12 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors dark:text-gray-200"
-                           :disabled="isTyping">
+                <form @submit.prevent="sendMessage" style="display: flex; gap: 8px; align-items: center;">
+                    <div style="flex: 1; position: relative;">
+                        <input id="chat-input" type="text" x-model="userInput" 
+                               placeholder="Tulis pesanmu di sini..." 
+                               style="width: 100%; background: #f9fafb; border: 1.5px solid #e5e7eb; color: #1f2937; font-size: 0.84rem; border-radius: 24px; padding: 10px 18px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;"
+                               onfocus="this.style.borderColor='#7c3aed'; this.style.boxShadow='0 0 0 3px rgba(124,58,237,0.1)'"
+                               onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'"
+                               :disabled="isTyping"
+                               class="dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-200 dark:placeholder-gray-500">
+                    </div>
                     <button type="submit" 
-                            class="absolute right-1 top-1 w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50"
-                            :disabled="isTyping || (!productContext && userInput.trim() === '')">
-                        <svg class="w-4 h-4 transform rotate-45 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            :disabled="isTyping || (!productContext && userInput.trim() === '')"
+                            style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.2s; box-shadow: 0 4px 12px rgba(124,58,237,0.4);"
+                            onmouseover="if(!this.disabled) { this.style.transform='scale(1.08)'; this.style.boxShadow='0 6px 16px rgba(124,58,237,0.5)'; }"
+                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 12px rgba(124,58,237,0.4)';">
+                        <svg style="width: 18px; height: 18px; color: white; transform: rotate(45deg) translateX(-1px);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                     </button>
                 </form>
+                <p style="text-align: center; font-size: 0.63rem; color: #d1d5db; margin-top: 8px;">Powered by Gemini AI · Interco Customer Service</p>
             </div>
         </div>
 
         {{-- Floating Button --}}
-        <button @click="open = !open" 
-                :class="open ? 'bg-gray-800 hover:bg-gray-700 text-white shadow-lg' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-xl hover:shadow-indigo-500/30 transform hover:-translate-y-1'"
-                class="absolute bottom-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none z-[901] pointer-events-auto">
-            <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button @click="open = !open"
+                class="absolute bottom-5 right-5 pointer-events-auto focus:outline-none"
+                style="width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 8px 25px rgba(124,58,237,0.45); background: linear-gradient(135deg, #7c3aed, #6d28d9);"
+                onmouseover="this.style.transform='scale(1.1) translateY(-2px)'; this.style.boxShadow='0 12px 30px rgba(124,58,237,0.55)';"
+                onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.boxShadow='0 8px 25px rgba(124,58,237,0.45)';">
+            <svg x-show="!open" style="width: 24px; height: 24px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
             </svg>
-            <svg x-show="open" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            <svg x-show="open" x-cloak style="width: 22px; height: 22px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
             </svg>
             <span x-show="!open" class="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse"></span>
         </button>
     </div>
 
-    {{-- Intersection Observer Script --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Reveal on scroll
@@ -1587,14 +1646,24 @@
                 isTyping: false,
                 userInput: '',
                 productContext: null,
-                messages: [
-                    { type: 'bot', text: 'Halo kak! 👋 Selamat datang di Interco. Ada yang bisa CS bantu jawab hari ini?' }
+                quickReplies: [
+                    '💰 Berapa harga minimum order?',
+                    '📦 Berapa lama proses produksi?',
+                    '🎨 Bisa custom desain sendiri?',
+                    '🚚 Pengiriman ke luar kota?'
                 ],
-                
+                messages: [
+                    { type: 'bot', text: 'Halo Kak! 👋 Selamat datang di <strong>Interco</strong>! Saya CS yang siap membantu kamu seputar produk sablon & konveksi custom kami. Mau tanya apa, Kak? 😊', time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }
+                ],
+
+                getTime() {
+                    return new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                },
+
                 init() {
                     this.$watch('messages', () => this.scrollToBottom());
                     this.$watch('isTyping', () => this.scrollToBottom());
-                    
+
                     window.addEventListener('open-chat', (e) => {
                         this.open = true;
                         this.productContext = e.detail;
@@ -1604,55 +1673,61 @@
                         });
                     });
                 },
-                
+
+                quickSend(text) {
+                    this.userInput = text;
+                    this.sendMessage();
+                },
+
                 async sendMessage() {
                     if (!this.productContext && this.userInput.trim() === '') return;
-                    
+
                     if (!this.isLoggedIn) {
                         const question = this.userInput;
                         const contextProduct = this.productContext;
-                        
-                        this.messages.push({ 
-                            type: 'user', 
+
+                        this.messages.push({
+                            type: 'user',
                             text: question || "Halo kak, saya mau tanya tentang produk ini dong.",
-                            product: contextProduct
+                            product: contextProduct,
+                            time: this.getTime()
                         });
-                        
+
                         this.userInput = '';
                         this.productContext = null;
                         this.isTyping = true;
-                        
+
                         setTimeout(() => {
                             this.isTyping = false;
-                            this.messages.push({ 
-                                type: 'bot', 
-                                text: 'Maaf Kak, untuk menggunakan fitur tanya jawab dengan Interco CS, Kakak harus <a href="/login" style="color:#818cf8; font-weight:bold; text-decoration:underline;">Login</a> terlebih dahulu ya. 😊' 
+                            this.messages.push({
+                                type: 'bot',
+                                text: 'Hei Kak! 😊 Senang kamu mau tanya-tanya di sini. Tapi supaya CS bisa bantu lebih maksimal, Kakak perlu <a href="/login" style="color:#a78bfa; font-weight:700; text-decoration:underline;">Masuk / Login</a> dulu ya. Gak lama kok, setelah login langsung bisa chat sepuasnya! 🔐',
+                                time: this.getTime()
                             });
-                        }, 800);
+                        }, 900);
                         return;
                     }
-                    
+
                     const question = this.userInput;
                     const contextProduct = this.productContext;
-                    
+
                     this.userInput = '';
                     this.productContext = null;
-                    
-                    // Add User Message
+
                     let displayQuestion = question;
                     if (contextProduct && question.trim() === '') {
                         displayQuestion = "Halo kak, saya mau tanya tentang produk ini dong.";
                     }
 
-                    this.messages.push({ 
-                        type: 'user', 
+                    this.messages.push({
+                        type: 'user',
                         text: displayQuestion,
-                        product: contextProduct
+                        product: contextProduct,
+                        time: this.getTime()
                     });
-                    
-                    // Show typing
+
                     this.isTyping = true;
-                    
+
                     try {
                         let promptText = displayQuestion;
                         if (contextProduct) {
@@ -1669,27 +1744,25 @@
                             },
                             body: JSON.stringify({ message: promptText })
                         });
-                        
+
                         const data = await response.json();
-                        
+
                         this.isTyping = false;
                         if (response.ok) {
-                            this.messages.push({ type: 'bot', text: data.reply });
+                            this.messages.push({ type: 'bot', text: data.reply, time: this.getTime() });
                         } else {
-                            this.messages.push({ type: 'bot', text: data.reply || 'Maaf kak, CS sedang ada gangguan jaringan. 🙏' });
+                            this.messages.push({ type: 'bot', text: data.reply || 'Aduh Kak, sepertinya CS lagi ada gangguan jaringan sebentar. Coba tanya ulang ya! 🙏', time: this.getTime() });
                         }
                     } catch (error) {
                         this.isTyping = false;
-                        this.messages.push({ type: 'bot', text: 'Maaf kak, CS gagal terhubung ke server. 🙏' });
+                        this.messages.push({ type: 'bot', text: 'Waduh, koneksi CS terputus sebentar nih Kak. Mohon coba lagi ya! 🙏', time: this.getTime() });
                     }
                 },
-                
+
                 scrollToBottom() {
                     this.$nextTick(() => {
                         const container = document.getElementById('chat-messages');
-                        if (container) {
-                            container.scrollTop = container.scrollHeight;
-                        }
+                        if (container) container.scrollTop = container.scrollHeight;
                     });
                 }
             }));
