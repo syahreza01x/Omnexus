@@ -57,6 +57,13 @@
                             </svg>
                             List Transaksi
                         </a>
+
+                        <a href="{{ route('admin.web.faqs.index') }}" class="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs('admin.web.faqs*') ? 'bg-purple-600/10 text-purple-400' : 'text-gray-400 hover:bg-gray-800 hover:text-gray-100' }}">
+                            <svg class="w-5 h-5 {{ request()->routeIs('admin.web.faqs*') ? 'text-purple-500' : 'text-gray-500 group-hover:text-gray-300' }} transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                            </svg>
+                            Kelola FAQ
+                        </a>
                     </div>
                 @endif
 
@@ -172,21 +179,41 @@
             <!-- Page Content -->
             <div class="flex-1 overflow-auto p-6 md:p-8">
                 <div class="max-w-7xl mx-auto">
-                    @if (session('success'))
-                        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" 
-                             class="mb-6 rounded-2xl border border-green-200 bg-green-50 px-6 py-4 flex items-center justify-between dark:border-green-900/50 dark:bg-green-900/20">
-                            <div class="flex items-center gap-3 text-green-700 dark:text-green-400 font-medium">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {{ session('success') }}
+                    {{-- ─── Toast Notification ─── --}}
+                    @if(session('success'))
+                    <div x-data="{ show: true, progress: 100 }" 
+                         x-show="show" 
+                         x-init="
+                            setTimeout(() => show = false, 3000);
+                            let interval = setInterval(() => {
+                                progress -= 1;
+                                if(progress <= 0) clearInterval(interval);
+                            }, 30);
+                         "
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="transform translate-x-full opacity-0"
+                         x-transition:enter-end="transform translate-x-0 opacity-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="transform translate-x-0 opacity-100"
+                         x-transition:leave-end="transform translate-x-full opacity-0"
+                         class="fixed bottom-6 right-6 z-[999] bg-white dark:bg-gray-900 border border-green-200 dark:border-green-900/50 shadow-2xl rounded-xl overflow-hidden"
+                         style="width: 320px;" x-cloak>
+                        <div class="p-4 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             </div>
-                            <button @click="show = false" class="text-green-500 hover:text-green-700">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100">Berhasil!</h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ session('success') }}</p>
+                            </div>
+                            <button @click="show = false" class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
+                        <div class="h-1 bg-gray-100 dark:bg-gray-800 w-full">
+                            <div class="h-full bg-green-500" :style="`width: ${progress}%`"></div>
+                        </div>
+                    </div>
                     @endif
 
                     @if ($errors->any())

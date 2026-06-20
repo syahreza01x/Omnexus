@@ -22,6 +22,12 @@ Route::middleware(['auth', 'check.admin:admin_web,super_admin'])->group(function
     Route::get('/admin/web/transactions', [AdminWebController::class, 'transactions'])->name('admin.web.transactions');
     Route::get('/admin/web/transactions/{transaction}', [AdminWebController::class, 'showTransaction'])->name('admin.web.transactions.show');
     Route::patch('/admin/web/transactions/{transaction}/status', [AdminWebController::class, 'updateTransactionStatus'])->name('admin.web.transactions.update-status');
+
+    // FAQs Management
+    Route::get('/admin/web/faqs', [\App\Http\Controllers\FaqController::class, 'index'])->name('admin.web.faqs.index');
+    Route::post('/admin/web/faqs', [\App\Http\Controllers\FaqController::class, 'store'])->name('admin.web.faqs.store');
+    Route::patch('/admin/web/faqs/{faq}', [\App\Http\Controllers\FaqController::class, 'update'])->name('admin.web.faqs.update');
+    Route::delete('/admin/web/faqs/{faq}', [\App\Http\Controllers\FaqController::class, 'destroy'])->name('admin.web.faqs.destroy');
 });
 
 Route::middleware(['auth', 'check.admin:admin_warehouse,super_admin'])->group(function () {
