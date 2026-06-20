@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', productModalOpen: false, cartOpen: false, selectedProduct: null, navScrolled: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); window.addEventListener('scroll', () => { navScrolled = window.scrollY > 20 })" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', productModalOpen: false, cartOpen: false, mobileMenuOpen: false, selectedProduct: null, navScrolled: false, searchQuery: '' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); window.addEventListener('scroll', () => { let sc = window.scrollY > 20; if(navScrolled !== sc) navScrolled = sc; }, { passive: true })" :class="{ 'dark': darkMode }" class="overflow-x-hidden" style="scroll-behavior: smooth;">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Interco — Wujudkan Pakaian Impianmu</title>
     <meta name="description" content="Custom order pakaian premium. Desain bebas, bahan berkualitas, pengerjaan cepat.">
+
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Favicon -->
     <link rel="icon" href="{{ asset('images/icon.png') }}" type="image/png">
@@ -95,14 +97,15 @@
         .hero-grain {
             position: absolute;
             inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-            opacity: 0.5;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            opacity: 0.3;
             pointer-events: none;
         }
         .hero-orb {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px);
+            will-change: transform;
+            transform: translateZ(0);
             animation: float 8s ease-in-out infinite;
         }
         .hero-orb-1 {
@@ -577,7 +580,7 @@
             position: relative;
             width: min(900px, calc(100vw - 2rem));
             max-height: calc(100vh - 4rem);
-            overflow: hidden;
+            overflow-y: auto;
             border-radius: 28px;
             background: var(--surface);
             box-shadow: 0 40px 80px rgba(0,0,0,0.2);
@@ -633,7 +636,10 @@
             height: 64px;
             max-width: 1280px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 12px;
+        }
+        @media (min-width: 768px) {
+            .nav-inner { padding: 0 24px; }
         }
 
         /* Add to cart button pulse */
@@ -681,33 +687,34 @@
     <nav class="navbar" :class="{ 'scrolled': navScrolled }" id="navbar">
         <div class="nav-inner">
             {{-- Logo --}}
-            <a href="/" class="flex items-center gap-2.5 group" style="text-decoration: none;">
-                <div class="relative">
-                    <div class="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:bg-violet-500">
-                        <img src="{{ asset('images/icon.png') }}" alt="Interco" class="h-5 w-5 object-contain brightness-0 invert">
-                    </div>
-                </div>
-                <span class="text-lg font-bold" style="color: var(--text); transition: color 0.3s;" :style="(navScrolled || !darkMode) ? 'color: var(--text)' : 'color: white'">Interco</span>
+            <a href="/" class="flex items-center gap-2" style="text-decoration: none;">
+                <img src="{{ asset('images/logo.png') }}" alt="Interco Logo" class="w-8 h-8 md:w-9 md:h-9 object-contain" onerror="this.src='{{ asset('images/icon.png') }}'">
+                <span class="font-bold text-xl md:text-2xl tracking-tight transition-colors" :style="(navScrolled || !darkMode) ? 'color: var(--text)' : 'color: white'">Interco</span>
             </a>
 
-            {{-- Search --}}
-            <div class="hidden md:flex flex-1 max-w-xs mx-8 search-wrap">
-                <div class="relative w-full">
-                    <input type="text" placeholder="Cari produk..."
-                        class="w-full rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none transition-all duration-300"
-                        style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);"
-                        :style="(navScrolled || !darkMode) ? 'background: var(--surface-2); border-color: var(--border); color: var(--text)' : 'background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9)'">
-                    <svg class="absolute left-3 top-3 h-4 w-4" style="color: rgba(255,255,255,0.4);" :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.4)'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </div>
+            {{-- Nav Links --}}
+            <div class="hidden md:flex flex-1 justify-center items-center gap-8">
+                <a href="#" class="text-sm font-semibold transition-all duration-300" :class="(navScrolled || !darkMode) ? 'text-gray-800 hover:text-violet-600 dark:text-white dark:hover:text-violet-400' : 'text-white/85 hover:text-white'">Beranda</a>
+                <a href="#produk" class="text-sm font-semibold transition-all duration-300" :class="(navScrolled || !darkMode) ? 'text-gray-800 hover:text-violet-600 dark:text-white dark:hover:text-violet-400' : 'text-white/85 hover:text-white'">Produk</a>
+                <a href="#kategori" class="text-sm font-semibold transition-all duration-300" :class="(navScrolled || !darkMode) ? 'text-gray-800 hover:text-violet-600 dark:text-white dark:hover:text-violet-400' : 'text-white/85 hover:text-white'">Kategori</a>
+                <a href="#testimoni" class="text-sm font-semibold transition-all duration-300" :class="(navScrolled || !darkMode) ? 'text-gray-800 hover:text-violet-600 dark:text-white dark:hover:text-violet-400' : 'text-white/85 hover:text-white'">Testimoni</a>
             </div>
 
             {{-- Right Actions --}}
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1 md:gap-2">
+                {{-- Compact Search --}}
+                <div class="hidden sm:block relative w-48 search-wrap mr-1">
+                    <input type="text" placeholder="Cari..." x-model="searchQuery"
+                        class="w-full rounded-full py-1.5 pl-8 pr-3 text-sm focus:outline-none transition-all duration-300"
+                        style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);"
+                        :style="(navScrolled || !darkMode) ? 'background: var(--surface-2); border-color: var(--border); color: var(--text)' : 'background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9)'">
+                    <svg class="absolute left-2.5 top-2 h-4 w-4" style="color: rgba(255,255,255,0.4);" :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.4)'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
                 {{-- Dark toggle --}}
                 <button @click="darkMode = !darkMode"
-                    class="p-2.5 rounded-xl transition-all duration-200"
+                    class="p-2 md:p-2.5 rounded-xl transition-all duration-200"
                     style="color: rgba(255,255,255,0.7);"
                     :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'"
                     :class="(navScrolled || !darkMode) ? 'hover:bg-gray-100 dark:hover:bg-zinc-800' : 'hover:bg-white/10'">
@@ -722,24 +729,26 @@
                 {{-- Cart (hanya tampil jika sudah login) --}}
                 @auth
                 <button type="button" @click="productModalOpen = false; cartOpen = true"
-                    class="relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200"
-                    style="color: rgba(255,255,255,0.7);"
-                    :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'"
-                    :class="(navScrolled || !darkMode) ? 'hover:bg-gray-100 dark:hover:bg-zinc-800' : 'hover:bg-white/10'">
-                    @if($cartCount > 0)
-                        <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-zinc-950">{{ $cartCount }}</span>
-                    @endif
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
-                    </svg>
+                    class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 text-gray-500 transition-colors hover:bg-gray-100 dark:bg-zinc-900 dark:text-gray-400 dark:hover:bg-zinc-800 dark:hover:text-gray-300">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <div id="cart-badge">
+                        @if($cartCount > 0)
+                            <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-zinc-950">{{ $cartCount }}</span>
+                        @endif
+                    </div>
                 </button>
                 @endauth
 
                 @auth
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open"
-                            class="flex items-center justify-center w-9 h-9 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-500 transition-all duration-200">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            class="flex items-center justify-center p-2 md:p-2.5 rounded-xl transition-all duration-200"
+                            style="color: rgba(255,255,255,0.7);"
+                            :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'"
+                            :class="(navScrolled || !darkMode) ? 'hover:bg-gray-100 dark:hover:bg-zinc-800' : 'hover:bg-white/10'">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
                         </button>
                         <div x-show="open" @click.away="open = false" x-transition
                             class="absolute right-0 mt-2 w-52 rounded-2xl shadow-xl border py-2 z-50"
@@ -762,10 +771,34 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="btn-primary" style="padding: 10px 20px; font-size: 0.85rem;">
+                    <a href="{{ route('login') }}" class="btn-primary" style="padding: 10px 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+                        </svg>
                         Masuk
                     </a>
                 @endauth
+
+                {{-- Hamburger Menu (Mobile) --}}
+                <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden p-2 md:p-2.5 rounded-xl transition-colors"
+                        style="color: rgba(255,255,255,0.7);"
+                        :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'"
+                        :class="(navScrolled || !darkMode) ? 'hover:bg-gray-100 dark:hover:bg-zinc-800' : 'hover:bg-white/10'">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        <path x-show="mobileMenuOpen" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Mobile Menu Dropdown --}}
+        <div x-show="mobileMenuOpen" x-transition.opacity class="md:hidden border-t" style="border-color: var(--border); background: var(--surface); position: absolute; width: 100%; top: 100%; left: 0;">
+            <div class="flex flex-col py-4 px-6 space-y-4">
+                <a href="#" @click="mobileMenuOpen = false" class="text-sm font-semibold" style="color: var(--text);">Beranda</a>
+                <a href="#produk" @click="mobileMenuOpen = false" class="text-sm font-semibold" style="color: var(--text);">Produk</a>
+                <a href="#kategori" @click="mobileMenuOpen = false" class="text-sm font-semibold" style="color: var(--text);">Kategori</a>
+                <a href="#testimoni" @click="mobileMenuOpen = false" class="text-sm font-semibold" style="color: var(--text);">Testimoni</a>
             </div>
         </div>
     </nav>
@@ -778,7 +811,7 @@
         <div class="hero-orb hero-orb-3"></div>
 
         <div style="max-width: 1280px; margin: 0 auto; padding: 80px 24px; width: 100%; position: relative; z-index: 1;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;" class="md:grid-cols-2">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                 {{-- Left content --}}
                 <div>
                     <div class="hero-badge">
@@ -812,7 +845,7 @@
                     </div>
 
                     {{-- Mini stats --}}
-                    <div style="display: flex; gap: 32px; margin-top: 56px; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.08);">
+                    <div class="flex flex-wrap gap-8 mt-14 pt-8" style="border-top: 1px solid rgba(255,255,255,0.08);">
                         <div>
                             <div style="font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1;">500+</div>
                             <div style="font-size: 0.78rem; color: #6b7280; margin-top: 4px; font-weight: 500;">Produk Custom</div>
@@ -831,7 +864,7 @@
                 </div>
 
                 {{-- Right: Floating cards --}}
-                <div class="hero-visual" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px;">
+                <div class="hero-visual grid grid-cols-1 md:grid-cols-2 gap-4 p-5">
                     <div class="hero-card ticker" style="display: flex; flex-direction: column; gap: 16px;">
                         <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(124,58,237,0.2); display: flex; align-items: center; justify-content: center;">
                             <svg style="width: 22px; height: 22px; color: #a78bfa;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -854,7 +887,7 @@
                             <div style="font-size: 0.9rem; font-weight: 600; color: #f4f4f5; line-height: 1.4;">Kualitas terbaik yang nyaman dan tahan lama</div>
                         </div>
                     </div>
-                    <div class="hero-card ticker" style="display: flex; flex-direction: column; gap: 16px; grid-column: span 2;">
+                    <div class="hero-card ticker md:col-span-2" style="display: flex; flex-direction: column; gap: 16px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(124,58,237,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <svg style="width: 22px; height: 22px; color: #a78bfa;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -885,14 +918,14 @@
     </section>
 
     {{-- ─── Kategori ─── --}}
-    <section style="padding: 80px 0; background: var(--surface);">
+    <section id="kategori" style="padding: 80px 0; background: var(--surface);">
         <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px;">
             <div class="reveal" style="text-align: center; margin-bottom: 48px;">
                 <div class="section-label" style="margin: 0 auto 12px;">Kategori Produk</div>
                 <h2 class="section-title" style="color: var(--text);">Pilih Jenis Pakaian</h2>
                 <p style="color: var(--muted); margin-top: 10px; font-size: 0.95rem;">Temukan kategori yang sesuai dengan kebutuhanmu</p>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;" class="reveal reveal-delay-1">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 reveal reveal-delay-1">
                 @php
                     $categories = [
                         ['name' => 'Aksesoris', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>'],
@@ -919,7 +952,7 @@
     {{-- ─── Produk Custom ─── --}}
     <section id="produk" class="bg-section-alt" style="padding: 80px 0;">
         <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px;">
-            <div class="reveal" style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 48px;">
+            <div class="reveal flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
                 <div>
                     <div class="section-label">Koleksi Terpopuler</div>
                     <h2 class="section-title" style="color: var(--text);">Produk Custom Pilihan</h2>
@@ -931,7 +964,7 @@
                 </a>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 @forelse($products as $i => $product)
                     @php
                         $productData = \Illuminate\Support\Js::from([
@@ -948,15 +981,20 @@
                         ]);
                     @endphp
                     <div class="product-card reveal reveal-delay-{{ min($i + 1, 4) }}"
+                        x-show="searchQuery === '' || '{{ strtolower($product->name) }}'.includes(searchQuery.toLowerCase())"
                         @click="cartOpen = false; selectedProduct = {{ $productData }}; productModalOpen = true">
-                        <div class="product-img-wrap">
+                        <div class="product-img-wrap" x-data="{ loaded: false }">
                             @if($product->category)
-                                <div class="product-category-tag">{{ $product->category }}</div>
+                                <div class="product-category-tag z-10">{{ $product->category }}</div>
                             @endif
+                            <div class="absolute inset-0 skeleton z-0" x-show="!loaded"></div>
                             <img src="{{ asset($product->image_path ?: 'images/items/1.png') }}"
                                 alt="{{ $product->name }}"
+                                @load="loaded = true"
+                                :class="loaded ? 'opacity-100' : 'opacity-0'"
+                                class="relative z-0 transition-opacity duration-500"
                                 loading="lazy">
-                            <div class="product-overlay">
+                            <div class="product-overlay z-10">
                                 <button class="product-overlay-btn" type="button">Lihat Detail</button>
                             </div>
                         </div>
@@ -967,12 +1005,13 @@
                                 <span style="font-size: 1rem; font-weight: 800; color: var(--text);">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
                                 <button type="button"
                                     @click.stop="cartOpen = false; selectedProduct = {{ $productData }}; productModalOpen = true"
-                                    style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(124,58,237,0.1); color: #7c3aed; border: none; cursor: pointer; transition: all 0.3s;"
-                                    onmouseover="this.style.background='#7c3aed'; this.style.color='white'; this.style.transform='scale(1.1)'"
+                                    style="padding: 0 14px; height: 36px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; background: rgba(124,58,237,0.1); color: #7c3aed; border: none; cursor: pointer; transition: all 0.3s; font-size: 0.8rem; font-weight: 700; white-space: nowrap;"
+                                    onmouseover="this.style.background='#7c3aed'; this.style.color='white'; this.style.transform='scale(1.05)'"
                                     onmouseout="this.style.background='rgba(124,58,237,0.1)'; this.style.color='#7c3aed'; this.style.transform='scale(1)'">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
                                     </svg>
+                                    Keranjang
                                 </button>
                             </div>
                         </div>
@@ -995,7 +1034,7 @@
                 <h2 class="section-title" style="color: var(--text);">Kenapa Custom di Interco?</h2>
                 <p style="color: var(--muted); margin-top: 10px; font-size: 0.95rem; max-width: 480px; margin-left: auto; margin-right: auto;">Kami menghadirkan pengalaman custom order yang mudah, cepat, dan berkualitas tinggi</p>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="feature-card reveal reveal-delay-1">
                     <div class="feature-icon">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -1040,7 +1079,7 @@
     </section>
 
     {{-- ─── Review Section ─── --}}
-    <section class="bg-section-alt" style="padding: 80px 0;">
+    <section id="testimoni" class="bg-section-alt" style="padding: 80px 0;">
         <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px;">
             <div class="reveal" style="text-align: center; margin-bottom: 52px;">
                 <div class="section-label" style="margin: 0 auto 12px;">Testimoni</div>
@@ -1057,7 +1096,7 @@
                     ['name' => 'Maya Sari', 'role' => 'Freelancer', 'stars' => 4, 'desc' => 'Bahan nyaman dipakai seharian. Bordir logonya juga detail dan presisi. Sangat memuaskan hasilnya.'],
                 ];
             @endphp
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 @foreach($reviews as $i => $review)
                     <div class="review-card reveal reveal-delay-{{ ($i % 3) + 1 }}">
                         <div class="review-quote">"</div>
@@ -1097,7 +1136,7 @@
                 class="reveal reveal-delay-1"
                 style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 24px; padding: 36px;">
                 @csrf
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="form-label">Email</label>
                         <input type="email" name="email" placeholder="kamu@email.com" class="form-input">
@@ -1146,7 +1185,7 @@
         {{-- Backdrop --}}
         <div class="absolute inset-0" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);" @click="productModalOpen = false"></div>
 
-        <div class="modal-content" style="overflow-y: auto;">
+        <div class="modal-content" style="overflow-y: auto;" x-data="{ modalQty: 1 }" x-init="$watch('productModalOpen', value => { if(value) modalQty = 1 })">
             {{-- Close btn --}}
             <button type="button" @click="productModalOpen = false"
                 style="position: absolute; top: 16px; right: 16px; z-index: 10; width: 36px; height: 36px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; color: var(--muted);"
@@ -1155,15 +1194,15 @@
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; min-height: 500px;">
+            <div class="grid grid-cols-1 md:grid-cols-2 min-h-[500px]">
                 {{-- Product image --}}
-                <div style="overflow: hidden; border-radius: 28px 0 0 28px;">
+                <div class="overflow-hidden rounded-t-[28px] md:rounded-tr-none md:rounded-l-[28px] h-64 md:h-auto">
                     <img x-bind:src="selectedProduct?.image" x-bind:alt="selectedProduct?.name"
                         style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;" class="modal-img">
                 </div>
 
                 {{-- Product info --}}
-                <div style="padding: 40px 36px; overflow-y: auto; max-height: 80vh;">
+                <div style="padding: 40px 36px;" class="overflow-y-auto max-h-[60vh] md:max-h-[80vh]">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
                         <span style="padding: 4px 12px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; background: rgba(124,58,237,0.1); color: #7c3aed; border: 1px solid rgba(124,58,237,0.2);"
                             x-text="selectedProduct?.category || 'Produk'"></span>
@@ -1173,10 +1212,10 @@
                     <h3 style="font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 12px;" x-text="selectedProduct?.name"></h3>
                     <p style="font-size: 0.9rem; line-height: 1.75; color: var(--muted); margin-bottom: 24px;" x-text="selectedProduct?.description"></p>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                    <div class="grid grid-cols-2 gap-3 mb-5">
                         <div style="padding: 16px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);">
                             <div style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Harga</div>
-                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text);" x-text="selectedProduct?.price_formatted"></div>
+                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text);" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format((selectedProduct?.price || 0) * modalQty)"></div>
                         </div>
                         <div style="padding: 16px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);">
                             <div style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Satuan</div>
@@ -1193,19 +1232,27 @@
                     <form method="POST" action="{{ route('cart.add') }}">
                         @csrf
                         <input type="hidden" name="product_id" x-bind:value="selectedProduct?.id">
-                        <div style="display: flex; gap: 12px; align-items: flex-end;">
-                            <div>
-                                <label style="display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px;">Qty</label>
-                                <input type="number" name="quantity" min="1" value="1"
-                                    style="width: 90px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 0.9rem; font-weight: 600; outline: none; transition: border-color 0.2s;"
-                                    onfocus="this.style.borderColor='#7c3aed'"
-                                    onblur="this.style.borderColor='var(--border)'">
+                        <div class="flex flex-col gap-3 w-full">
+                            <div class="flex gap-3 w-full items-end">
+                                <div>
+                                    <label style="display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px;">Qty</label>
+                                    <input type="number" name="quantity" min="1" x-model.number="modalQty"
+                                        style="width: 90px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 0.9rem; font-weight: 600; outline: none; transition: border-color 0.2s;"
+                                        onfocus="this.style.borderColor='#7c3aed'"
+                                        onblur="this.style.borderColor='var(--border)'">
+                                </div>
+                                <button type="button" @click="productModalOpen = false; window.dispatchEvent(new CustomEvent('open-chat', { detail: selectedProduct }))" class="btn-primary" style="flex: 1; justify-content: center; background: rgba(124,58,237,0.1); color: #7c3aed; border: 1px solid rgba(124,58,237,0.2); white-space: nowrap; height: 48px; display: flex; align-items: center; gap: 6px; padding: 0 16px;">
+                                    <svg style="width: 18px; height: 18px; flex-shrink: 0;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/>
+                                    </svg>
+                                    <span class="text-[0.8rem] sm:text-[0.85rem]">Hubungi Penjual</span>
+                                </button>
                             </div>
-                            <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; white-space: nowrap; height: 48px; display: flex; align-items: center; gap: 6px;">
+                                <svg style="width: 18px; height: 18px; flex-shrink: 0;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
                                 </svg>
-                                Masukkan ke Keranjang
+                                + Keranjang
                             </button>
                         </div>
                     </form>
@@ -1216,14 +1263,22 @@
                             <svg style="width: 18px; height: 18px; color: #7c3aed; flex-shrink: 0;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
                             </svg>
-                            <p style="font-size: 0.83rem; color: var(--muted); line-height: 1.5;">Kamu perlu <strong style="color: var(--text);">masuk</strong> terlebih dahulu untuk menambahkan produk ke keranjang.</p>
+                            <p style="font-size: 0.83rem; color: var(--muted); line-height: 1.5;">Kamu perlu <strong style="color: var(--text);">masuk</strong> terlebih dahulu untuk memesan.</p>
                         </div>
-                        <a href="{{ route('login') }}" class="btn-primary" style="justify-content: center; text-align: center; text-decoration: none;">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-                            </svg>
-                            Masuk untuk Memesan
-                        </a>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button type="button" @click="productModalOpen = false; window.dispatchEvent(new CustomEvent('open-chat', { detail: selectedProduct }))" class="btn-primary" style="width: 100%; justify-content: center; background: rgba(124,58,237,0.1); color: #7c3aed; border: 1px solid rgba(124,58,237,0.2); white-space: nowrap; height: 48px; display: flex; align-items: center; gap: 6px;">
+                                <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/>
+                                </svg>
+                                Hubungi Penjual
+                            </button>
+                            <a href="{{ route('login') }}" class="btn-primary" style="width: 100%; justify-content: center; text-align: center; text-decoration: none; white-space: nowrap; height: 48px; display: flex; align-items: center; gap: 6px;">
+                                <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+                                </svg>
+                                Masuk
+                            </a>
+                        </div>
                     </div>
                     @endauth
 
@@ -1245,7 +1300,7 @@
 
         {{-- Drawer --}}
         <div class="absolute right-0 top-0 h-full overflow-y-auto"
-            style="width: min(440px, 100vw); background: var(--surface); box-shadow: -20px 0 60px rgba(0,0,0,0.15);"
+            style="width: min(500px, 100vw); background: var(--surface); box-shadow: -20px 0 60px rgba(0,0,0,0.15);"
             x-transition:enter="transition ease-out duration-400"
             x-transition:enter-start="transform translate-x-full"
             x-transition:enter-end="transform translate-x-0"
@@ -1254,6 +1309,7 @@
             x-transition:leave-end="transform translate-x-full">
 
             {{-- Header --}}
+            <div id="cart-drawer-inner" class="flex flex-col h-full">
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1; backdrop-filter: blur(20px);">
                 <div>
                     <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); font-family: 'Playfair Display', serif;">Keranjang Belanja</h3>
@@ -1287,11 +1343,8 @@
                                             @csrf
                                             @method('PATCH')
                                             <input type="number" name="quantity" min="1" value="{{ $cartItem['quantity'] }}"
-                                                style="width: 60px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.82rem; font-weight: 600; outline: none; text-align: center;">
-                                            <button type="submit"
-                                                style="padding: 6px 14px; background: #7c3aed; color: white; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: background 0.2s;"
-                                                onmouseover="this.style.background='#6d28d9'"
-                                                onmouseout="this.style.background='#7c3aed'">Update</button>
+                                                style="width: 60px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.82rem; font-weight: 600; outline: none; text-align: center;"
+                                                onchange="updateCartAJAX(this.form)">
                                         </form>
                                         <form method="POST" action="{{ route('cart.remove', $cartProduct) }}">
                                             @csrf
@@ -1299,20 +1352,30 @@
                                             <button type="submit"
                                                 style="padding: 6px 12px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
                                                 onmouseover="this.style.background='#ef4444'; this.style.color='white'"
-                                                onmouseout="this.style.background='rgba(239,68,68,0.1)'; this.style.color='#ef4444'">Hapus</button>
+                                                onmouseout="this.style.background='rgba(239,68,68,0.1)'; this.style.color='#ef4444'"
+                                                onclick="event.preventDefault(); updateCartAJAX(this.form)">Hapus</button>
                                         </form>
+                                        <button type="button" @click="cartOpen = false; selectedProduct = {{ json_encode($cartProduct) }}; window.dispatchEvent(new CustomEvent('open-chat', { detail: selectedProduct }))" style="padding: 6px 12px; background: rgba(124,58,237,0.1); color: #7c3aed; border: 1px solid rgba(124,58,237,0.2); border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;" onmouseover="this.style.background='rgba(124,58,237,0.2)'" onmouseout="this.style.background='rgba(124,58,237,0.1)'">
+                                            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>
+                                            Chat
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     @endif
                 @empty
-                    <div style="text-align: center; padding: 48px 24px; border: 2px dashed var(--border); border-radius: 16px;">
-                        <svg style="width: 40px; height: 40px; margin: 0 auto 12px; color: var(--border);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
-                        </svg>
-                        <p style="font-size: 0.9rem; color: var(--muted); font-weight: 500;">Keranjang masih kosong</p>
-                        <p style="font-size: 0.8rem; color: var(--muted); margin-top: 4px;">Tambahkan produk ke keranjangmu</p>
+                    <div style="text-align: center; padding: 64px 24px; background: rgba(124,58,237,0.02); border: 2px dashed var(--border); border-radius: 20px;">
+                        <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: rgba(124,58,237,0.08); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <svg style="width: 36px; height: 36px; color: #7c3aed;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                            </svg>
+                        </div>
+                        <h4 style="font-size: 1.1rem; color: var(--text); font-weight: 700; margin-bottom: 8px;">Keranjang Kosong</h4>
+                        <p style="font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin-bottom: 24px;">Kamu belum menambahkan apapun. Yuk temukan produk custom impianmu sekarang!</p>
+                        <button type="button" @click="cartOpen = false" class="btn-primary" style="padding: 10px 24px; font-size: 0.85rem; border-radius: 99px;">
+                            Mulai Belanja
+                        </button>
                     </div>
                 @endforelse
             </div>
@@ -1342,6 +1405,7 @@
                 </div>
             </div>
             @endif
+            </div>
         </div>
     </div>
 
@@ -1391,6 +1455,113 @@
         </div>
     </footer>
 
+    {{-- ─── Chatbot FAQ Widget ─── --}}
+    <div x-data="chatbot({{ auth()->check() ? 'true' : 'false' }})" class="fixed inset-0 z-[900] pointer-events-none font-sans flex items-center justify-center">
+        {{-- Overlay Backdrop --}}
+        <div x-show="open" x-transition.opacity class="absolute inset-0 bg-black/50 pointer-events-auto" @click="open = false"></div>
+
+        {{-- Chat Window --}}
+        <div x-show="open" x-cloak
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="relative w-[95vw] md:w-[75vw] lg:w-[900px] h-[85vh] bg-white dark:bg-zinc-900 shadow-2xl rounded-2xl overflow-hidden flex flex-col pointer-events-auto">
+             
+            {{-- Header --}}
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white flex justify-between items-center shadow-md z-10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative font-bold text-lg">
+                        CS
+                        <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-indigo-600 rounded-full"></div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm leading-tight">Interco CS</h4>
+                        <p class="text-[10px] text-purple-100 uppercase tracking-wider">Selalu Online</p>
+                    </div>
+                </div>
+                <button @click="open = false" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-zinc-950 space-y-4" id="chat-messages">
+                <template x-for="(msg, index) in messages" :key="index">
+                    <div :class="msg.type === 'bot' ? 'flex items-start gap-2.5' : 'flex items-start gap-2.5 flex-row-reverse'">
+                        <div x-show="msg.type === 'bot'" class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex-shrink-0 flex items-center justify-center">
+                            <span class="text-indigo-600 dark:text-indigo-400 text-xs font-bold">CS</span>
+                        </div>
+                        <div :class="msg.type === 'bot' ? 'bg-white dark:bg-zinc-800 border border-gray-100 dark:border-gray-700 rounded-2xl rounded-tl-sm text-gray-700 dark:text-gray-300' : 'bg-indigo-600 text-white rounded-2xl rounded-tr-sm'" class="p-3 max-w-[80%] shadow-sm text-sm relative group">
+                            <template x-if="msg.product">
+                                <div class="mb-2 bg-white/20 border border-white/30 rounded-lg p-2 flex gap-2 cursor-pointer hover:bg-white/30 transition-colors" @click="selectedProduct = msg.product; productModalOpen = true">
+                                    <img :src="msg.product.image" class="w-12 h-12 rounded object-cover flex-shrink-0">
+                                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                                        <div class="text-xs font-bold truncate text-white" x-text="msg.product.name"></div>
+                                        <div class="text-[0.65rem] text-white/90" x-text="msg.product.price_formatted"></div>
+                                    </div>
+                                </div>
+                            </template>
+                            <p x-html="msg.text" class="leading-relaxed whitespace-pre-wrap"></p>
+                        </div>
+                    </div>
+                </template>
+
+                <div x-show="isTyping" class="flex items-start gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex-shrink-0 flex items-center justify-center">
+                        <span class="text-indigo-600 dark:text-indigo-400 text-xs font-bold">CS</span>
+                    </div>
+                    <div class="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-gray-700 rounded-2xl rounded-tl-sm p-4 flex items-center gap-1.5 shadow-sm max-w-[80%]">
+                        <div class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 0s;"></div>
+                        <div class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 0.2s;"></div>
+                        <div class="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style="animation-delay: 0.4s;"></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- FAQ Options / Text Input --}}
+            <div class="p-4 bg-white dark:bg-zinc-900 border-t border-gray-100 dark:border-gray-800 z-10 flex flex-col gap-3">
+                {{-- Product Context Preview --}}
+                <div x-show="productContext" x-transition class="relative flex items-center gap-3 p-2.5 border border-indigo-100 bg-indigo-50/50 rounded-xl dark:border-indigo-900/30 dark:bg-indigo-900/10">
+                    <button @click="productContext = null" type="button" class="absolute -top-2 -right-2 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 shadow-sm transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <img :src="productContext?.image" class="w-10 h-10 object-cover rounded-lg flex-shrink-0 border border-gray-200">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[0.75rem] font-bold text-gray-900 dark:text-white truncate leading-tight" x-text="productContext?.name"></div>
+                        <div class="text-[0.7rem] text-indigo-600 font-bold mt-0.5" x-text="productContext?.price_formatted"></div>
+                    </div>
+                </div>
+
+                <form @submit.prevent="sendMessage" class="flex gap-2 relative">
+                    <input id="chat-input" type="text" x-model="userInput" placeholder="Ketik pesan disini..." 
+                           class="w-full bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-gray-700 text-sm rounded-full py-2.5 pl-4 pr-12 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors dark:text-gray-200"
+                           :disabled="isTyping">
+                    <button type="submit" 
+                            class="absolute right-1 top-1 w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                            :disabled="isTyping || (!productContext && userInput.trim() === '')">
+                        <svg class="w-4 h-4 transform rotate-45 -ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {{-- Floating Button --}}
+        <button @click="open = !open" 
+                :class="open ? 'bg-gray-800 hover:bg-gray-700 text-white shadow-lg' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-xl hover:shadow-indigo-500/30 transform hover:-translate-y-1'"
+                class="absolute bottom-6 right-6 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 focus:outline-none z-[901] pointer-events-auto">
+            <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+            </svg>
+            <svg x-show="open" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            <span x-show="!open" class="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-white dark:border-gray-900 rounded-full animate-pulse"></span>
+        </button>
+    </div>
+
     {{-- Intersection Observer Script --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -1408,7 +1579,190 @@
 
             // Navbar scroll state handled by Alpine x-init
         });
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('chatbot', (isLoggedIn = false) => ({
+                isLoggedIn: isLoggedIn,
+                open: false,
+                isTyping: false,
+                userInput: '',
+                productContext: null,
+                messages: [
+                    { type: 'bot', text: 'Halo kak! 👋 Selamat datang di Interco. Ada yang bisa CS bantu jawab hari ini?' }
+                ],
+                
+                init() {
+                    this.$watch('messages', () => this.scrollToBottom());
+                    this.$watch('isTyping', () => this.scrollToBottom());
+                    
+                    window.addEventListener('open-chat', (e) => {
+                        this.open = true;
+                        this.productContext = e.detail;
+                        this.$nextTick(() => {
+                            const input = document.getElementById('chat-input');
+                            if(input) input.focus();
+                        });
+                    });
+                },
+                
+                async sendMessage() {
+                    if (!this.productContext && this.userInput.trim() === '') return;
+                    
+                    if (!this.isLoggedIn) {
+                        const question = this.userInput;
+                        const contextProduct = this.productContext;
+                        
+                        this.messages.push({ 
+                            type: 'user', 
+                            text: question || "Halo kak, saya mau tanya tentang produk ini dong.",
+                            product: contextProduct
+                        });
+                        
+                        this.userInput = '';
+                        this.productContext = null;
+                        this.isTyping = true;
+                        
+                        setTimeout(() => {
+                            this.isTyping = false;
+                            this.messages.push({ 
+                                type: 'bot', 
+                                text: 'Maaf Kak, untuk menggunakan fitur tanya jawab dengan Interco CS, Kakak harus <a href="/login" style="color:#818cf8; font-weight:bold; text-decoration:underline;">Login</a> terlebih dahulu ya. 😊' 
+                            });
+                        }, 800);
+                        return;
+                    }
+                    
+                    const question = this.userInput;
+                    const contextProduct = this.productContext;
+                    
+                    this.userInput = '';
+                    this.productContext = null;
+                    
+                    // Add User Message
+                    let displayQuestion = question;
+                    if (contextProduct && question.trim() === '') {
+                        displayQuestion = "Halo kak, saya mau tanya tentang produk ini dong.";
+                    }
+
+                    this.messages.push({ 
+                        type: 'user', 
+                        text: displayQuestion,
+                        product: contextProduct
+                    });
+                    
+                    // Show typing
+                    this.isTyping = true;
+                    
+                    try {
+                        let promptText = displayQuestion;
+                        if (contextProduct) {
+                            promptText = `[SISTEM: Pengguna melampirkan produk. Nama: ${contextProduct.name}, Harga: ${contextProduct.price_formatted}, Kategori: ${contextProduct.category}, Spesifikasi: ${contextProduct.specifications}, Sisa Stok: ${contextProduct.stock}. Berikan jawaban spesifik terkait produk ini]\n\nPesan User: ${displayQuestion}`;
+                        }
+
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        const response = await fetch('{{ route("chat.api") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ message: promptText })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        this.isTyping = false;
+                        if (response.ok) {
+                            this.messages.push({ type: 'bot', text: data.reply });
+                        } else {
+                            this.messages.push({ type: 'bot', text: data.reply || 'Maaf kak, CS sedang ada gangguan jaringan. 🙏' });
+                        }
+                    } catch (error) {
+                        this.isTyping = false;
+                        this.messages.push({ type: 'bot', text: 'Maaf kak, CS gagal terhubung ke server. 🙏' });
+                    }
+                },
+                
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        const container = document.getElementById('chat-messages');
+                        if (container) {
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    });
+                }
+            }));
+        });
     </script>
 
+    {{-- ─── Toast Notification ─── --}}
+    @if(session('success'))
+    <div x-data="{ show: true, progress: 100 }" 
+         x-show="show" 
+         x-init="
+            setTimeout(() => show = false, 3000);
+            let interval = setInterval(() => {
+                progress -= 1;
+                if(progress <= 0) clearInterval(interval);
+            }, 30);
+         "
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="transform translate-x-full opacity-0"
+         x-transition:enter-end="transform translate-x-0 opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="transform translate-x-0 opacity-100"
+         x-transition:leave-end="transform translate-x-full opacity-0"
+         class="fixed bottom-6 right-6 z-[999] bg-white dark:bg-zinc-900 border border-green-200 dark:border-green-900/50 shadow-2xl rounded-xl overflow-hidden"
+         style="width: 320px;" x-cloak>
+        <div class="p-4 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div>
+                <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100">Berhasil!</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ session('success') }}</p>
+            </div>
+            <button @click="show = false" class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="h-1 bg-gray-100 dark:bg-zinc-800 w-full">
+            <div class="h-full bg-green-500" :style="`width: ${progress}%`"></div>
+        </div>
+    </div>
+    @endif
+
+
+    <script>
+        async function updateCartAJAX(form) {
+            const formData = new FormData(form);
+            try {
+                await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' }
+                });
+                
+                const res = await fetch(window.location.href);
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                
+                const cartDrawer = document.querySelector('#cart-drawer-inner');
+                const newCartDrawer = doc.querySelector('#cart-drawer-inner');
+                if(cartDrawer && newCartDrawer) {
+                    cartDrawer.innerHTML = newCartDrawer.innerHTML;
+                }
+                
+                const badge = document.querySelector('#cart-badge');
+                const newBadge = doc.querySelector('#cart-badge');
+                if(badge && newBadge) {
+                    badge.innerHTML = newBadge.innerHTML;
+                }
+            } catch(e) {
+                console.error('Cart update failed', e);
+            }
+        }
+    </script>
 </body>
 </html>

@@ -90,3 +90,90 @@ Pendekatan iteratif — mulai dari redesign visual, lalu fix bug satu per satu �
 
 **Pelajaran utama:**
 Saat mengubah `position: sticky` menjadi `fixed`, selalu pertimbangkan dampaknya ke elemen di bawahnya. Perlunya konsistensi total (tidak setengah-setengah) memastikan seluruh panel web application memiliki identitas yang sama, mulai dari sisi pengguna publik sampai ke halaman manajemen (Admin).
+
+---
+
+## Sesi 2 — Perbaikan UI/UX Lanjutan, Mobile Responsiveness & Keamanan
+
+**Tanggal:** 2026-06-20
+
+### Komponen yang Berdampak
+
+| Komponen | File | Perubahan |
+| :--- | :--- | :--- |
+| Tombol Aksi Produk | `beranda.blade.php` | Ganti teks "Chat" → "Hubungi Penjual", tombol diproporsikan ulang |
+| Pesan Chat (FAQ) | `beranda.blade.php` | Opsi edit & hapus pesan dihapus (tidak diperlukan) |
+| Navbar | `beranda.blade.php` | Tambah efek hover pada link navigasi, animasi scroll saat klik menu |
+| Navbar Mobile | `beranda.blade.php` | Hamburger menu model mobile-first (overlay drawer), ikon diganti |
+| Logo Navbar | `beranda.blade.php` | Logo kiri atas diganti dengan logo perusahaan Interco yang asli |
+| Chatbot / FAQ Chat | `beranda.blade.php` | Tampilan popup chatbot diperbesar dan diposisikan di tengah layar |
+| Chatbot Auth Guard | `beranda.blade.php` | Chatbot hanya bisa digunakan saat login; tamu diarahkan login |
+| Modal Produk — Tombol | `beranda.blade.php` | Layout tombol QTY + Hubungi Penjual + Keranjang diubah ke *stacked layout* (menumpuk vertikal) untuk tampilan PC dan mobile |
+| Card Produk — Tombol | `beranda.blade.php` | Tombol keranjang di card diperlebar: dari ikon saja menjadi ikon + teks "Keranjang" |
+| Cart Drawer — Lebar | `beranda.blade.php` | Lebar drawer keranjang diperbesar dari 440px → 500px di desktop |
+| Cart QTY — Harga Otomatis | `beranda.blade.php` | Perubahan QTY di modal produk langsung mengupdate tampilan harga tanpa klik tombol |
+| Cart Update — AJAX | `beranda.blade.php` | Perubahan QTY dan hapus item di keranjang sekarang menggunakan AJAX (tanpa refresh browser) |
+| Cart — Tombol Chat | `beranda.blade.php` | Tambah tombol "Chat" per item di dalam drawer keranjang |
+| Security Headers | `app/Http/Middleware/SecurityHeaders.php` *(baru)* | Middleware baru menambahkan HTTP Security Headers ke semua respons |
+| Bootstrap Middleware | `bootstrap/app.php` | Daftarkan `SecurityHeaders` sebagai global middleware |
+| Chat Route | `routes/web.php` | Endpoint `/chat` dilindungi `auth` + `throttle:20,1` (anti-DDoS) |
+| User Model | `app/Models/User.php` | Hapus `role` dari `$fillable` (cegah Mass Assignment Attack) |
+| Profile Controller | `app/Http/Controllers/ProfileController.php` | Validasi upload foto diperketat: tambah `mimes:jpg,jpeg,png,webp` |
+| Environment Config | `.env` | Aktifkan `SESSION_ENCRYPT=true`, tambah komentar peringatan untuk production |
+
+---
+
+### Detail Perubahan
+
+**1. Perbaikan Tombol & Tata Letak UI Modal Produk**
+
+Tombol aksi di popup detail produk sebelumnya tidak proporsional — tombol "Keranjang" terpotong karena layout horizontal tidak cukup lebar. Solusinya mengubah layout dari `flex-row` menjadi *stacked layout* (vertikal):
+- Baris atas: input QTY berdampingan dengan tombol "Hubungi Penjual"
+- Baris bawah: tombol "+ Keranjang" memanjang penuh (*full-width*) seperti pola Tokopedia/Shopee
+
+**2. Mobile Navbar Responsif**
+
+Navbar di tampilan mobile diubah total mengikuti standar aplikasi mobile modern:
+- Hamburger menu membuka *overlay drawer* dari kiri/atas
+- Link navigasi tersusun secara vertikal
+- Efek hover ditambahkan pada setiap item
+- Animasi smooth scroll saat mengklik link navigasi
+
+**3. Chatbot Terlindungi Auth**
+
+Untuk mencegah penyalahgunaan dan serangan DDoS terhadap Gemini API:
+- Pengguna yang belum login melihat pesan ajakan login ketika mencoba mengetik di chatbot
+- Endpoint `/chat` di backend (server-side) juga dilindungi middleware `auth` dan `throttle:20,1`
+
+**4. Keranjang Belanja — AJAX Update (Tanpa Refresh)**
+
+Sebelumnya, mengubah QTY di keranjang menyebabkan seluruh halaman refresh (page reload) yang mengganggu UX karena drawer keranjang tertutup otomatis. Perbaikannya:
+- Dibuat fungsi `updateCartAJAX()` menggunakan Fetch API
+- Saat QTY diubah atau item dihapus, JavaScript mengirim request ke server, lalu memperbarui hanya bagian HTML drawer keranjang dan badge jumlah item — tanpa reload halaman sama sekali
+
+**5. Audit & Penguatan Keamanan (Security Hardening)**
+
+Hasil audit keamanan menyeluruh menemukan beberapa kerentanan yang langsung diperbaiki:
+
+| Kerentanan | Tingkat | Status |
+| :--- | :--- | :--- |
+| Endpoint `/chat` tanpa auth & rate limit | 🔴 Kritis | ✅ Diperbaiki |
+| `role` di `$fillable` (Mass Assignment) | 🟠 Tinggi | ✅ Diperbaiki |
+| Tidak ada HTTP Security Headers | 🟡 Sedang | ✅ Diperbaiki |
+| Upload foto tanpa validasi ekstensi | 🟡 Sedang | ✅ Diperbaiki |
+| Sesi tidak terenkripsi | 🟠 Tinggi | ✅ Diperbaiki |
+
+Kerentanan yang membutuhkan tindakan manual (saat deploy ke production): API Key bocor di `.env` (pastikan `.env` tidak masuk Git — sudah diverifikasi ada di `.gitignore`), database tanpa password, dan `APP_DEBUG=true`.
+
+---
+
+### Refleksi Sesi 2
+
+**Yang berjalan baik:**
+Pendekatan *mobile-first* terbukti penting — banyak elemen yang terlihat baik di desktop ternyata berantakan di layar kecil. Penggunaan AJAX untuk update keranjang secara dramatis meningkatkan UX tanpa perlu mengubah arsitektur backend sama sekali (cukup `fetch()` di sisi klien). Audit keamanan berhasil mengidentifikasi 10 isu dengan 5 di antaranya langsung diperbaiki secara otomatis.
+
+**Yang bisa diperbaiki:**
+Karena chatbot sekarang hanya bisa digunakan saat login, perlu dipertimbangkan apakah ada fitur FAQ sederhana (tanpa AI) untuk tamu. Juga, fungsi AJAX `updateCartAJAX` masih perlu penanganan error yang lebih baik (misalnya menampilkan notifikasi saat jaringan putus).
+
+**Pelajaran utama:**
+Keamanan bukan fitur tambahan yang dibuat di akhir, melainkan harus dipertimbangkan sejak awal. Hal sederhana seperti menambahkan `throttle:20,1` pada satu route dapat mencegah kerugian finansial akibat penyalahgunaan API berbayar.
