@@ -31,7 +31,9 @@ Route::get('/', function () {
         }, 0);
     }
 
-    return view('beranda', compact('products', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal'));
+    $faqs = \App\Models\Faq::where('is_active', true)->orderBy('order')->get();
+
+    return view('beranda', compact('products', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal', 'faqs'));
 })->name('beranda');
 
 Route::get('/dashboard', function () {
@@ -59,6 +61,10 @@ Route::middleware('auth')->group(function () {
     
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::post('/chat', [\App\Http\Controllers\ChatbotController::class, 'chat'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('chat.api');
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';

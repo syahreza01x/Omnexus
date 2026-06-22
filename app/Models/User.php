@@ -22,7 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        // 'role' intentionally excluded to prevent mass assignment attacks
         'google_id',
         'profile_photo_path',
         'phone',
