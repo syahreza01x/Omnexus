@@ -6,7 +6,7 @@
 </div>
 
 <div class="max-w-2xl rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-    <form method="POST" action="{{ route('admin.web.products.store') }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.web.products.store') }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
 
         <div>
@@ -51,8 +51,16 @@
         </div>
 
         <div>
-            <label for="specifications" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Spesifikasi</label>
-            <textarea id="specifications" name="specifications" rows="4" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></textarea>
+            <label for="image" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Gambar Produk</label>
+            <input id="image" name="image" type="file" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+            @error('image')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+        </div>
+
+        <div>
+            <label class="flex items-center gap-2">
+                <input type="checkbox" name="is_active" value="1" checked class="rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                <span class="text-sm text-gray-700 dark:text-gray-300">Produk Aktif</span>
+            </label>
         </div>
 
         <div class="flex gap-4">

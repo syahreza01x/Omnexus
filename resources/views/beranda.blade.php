@@ -973,7 +973,7 @@
                             'description' => $product->description,
                             'price' => (int) $product->price,
                             'price_formatted' => 'Rp ' . number_format($product->price, 0, ',', '.'),
-                            'image' => asset($product->image_path ?: 'images/items/1.png'),
+                            'image' => asset($product->image_path ? 'storage/' . $product->image_path : 'images/items/1.png'),
                             'category' => $product->category,
                             'specifications' => $product->specifications,
                             'stock' => $product->stock,
@@ -988,7 +988,7 @@
                                 <div class="product-category-tag z-10">{{ $product->category }}</div>
                             @endif
                             <div class="absolute inset-0 skeleton z-0" x-show="!loaded"></div>
-                            <img src="{{ asset($product->image_path ?: 'images/items/1.png') }}"
+                            <img src="{{ asset($product->image_path ? 'storage/' . $product->image_path : 'images/items/1.png') }}"
                                 alt="{{ $product->name }}"
                                 @load="loaded = true"
                                 :class="loaded ? 'opacity-100' : 'opacity-0'"
@@ -1331,7 +1331,7 @@
                         <div class="cart-item">
                             <div style="display: flex; gap: 14px;">
                                 <div style="width: 72px; height: 72px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: var(--surface-2);">
-                                    <img src="{{ asset($cartProduct->image_path ?: 'images/items/1.png') }}"
+                                    <img src="{{ asset($cartProduct->image_path ? 'storage/' . $cartProduct->image_path : 'images/items/1.png') }}"
                                         alt="{{ $cartProduct->name }}"
                                         style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
