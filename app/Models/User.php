@@ -96,6 +96,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get user's custom orders.
+     */
+    public function customOrders(): HasMany
+    {
+        return $this->hasMany(CustomOrder::class);
+    }
+
+    /**
      * Get user's stock logs.
      */
     public function stockLogs(): HasMany

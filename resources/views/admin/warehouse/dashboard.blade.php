@@ -44,7 +44,7 @@
 <!-- Quick Actions -->
 <div class="mb-8">
     <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Aksi Cepat</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
         <a href="{{ route('admin.warehouse.stocks') }}" class="group flex flex-col p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg shadow-indigo-500/10">
             <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-3 group-hover:scale-110 transition-transform">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
@@ -59,6 +59,14 @@
             </div>
             <span class="font-medium text-gray-900 dark:text-gray-100">History Perubahan</span>
             <span class="text-xs text-gray-500 mt-1">Lacak log keluar-masuk gudang</span>
+        </a>
+
+        <a href="{{ route('admin.warehouse.custom-orders.index') }}" class="group flex flex-col p-5 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-500 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg shadow-purple-500/10">
+            <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-3 group-hover:scale-110 transition-transform">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            </div>
+            <span class="font-medium text-gray-900 dark:text-gray-100">Custom Order Produksi</span>
+            <span class="text-xs text-gray-500 mt-1">Lihat pesanan sedang diproduksi</span>
         </a>
     </div>
 </div>

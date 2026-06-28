@@ -60,6 +60,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/addresses/{address}', [ProfileController::class, 'deleteAddress'])->name('address.delete');
     
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Custom Order Routes
+    Route::get('/custom-orders/export/csv', [\App\Http\Controllers\CustomOrderController::class, 'exportCsv'])->name('custom-orders.export');
+    Route::resource('custom-orders', \App\Http\Controllers\CustomOrderController::class)->only(['index', 'create', 'store', 'show']);
 });
 
 Route::post('/chat', [\App\Http\Controllers\ChatbotController::class, 'chat'])

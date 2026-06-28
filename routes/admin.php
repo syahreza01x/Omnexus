@@ -28,6 +28,12 @@ Route::middleware(['auth', 'check.admin:admin_web,super_admin'])->group(function
     Route::post('/admin/web/faqs', [\App\Http\Controllers\FaqController::class, 'store'])->name('admin.web.faqs.store');
     Route::patch('/admin/web/faqs/{faq}', [\App\Http\Controllers\FaqController::class, 'update'])->name('admin.web.faqs.update');
     Route::delete('/admin/web/faqs/{faq}', [\App\Http\Controllers\FaqController::class, 'destroy'])->name('admin.web.faqs.destroy');
+
+    // Admin Custom Orders
+    Route::get('/admin/web/custom-orders/{custom_order}/download', [\App\Http\Controllers\Admin\AdminCustomOrderController::class, 'downloadDesign'])->name('admin.web.custom-orders.download');
+    Route::resource('/admin/web/custom-orders', \App\Http\Controllers\Admin\AdminCustomOrderController::class)
+        ->names('admin.web.custom-orders')
+        ->only(['index', 'show', 'update']);
 });
 
 Route::middleware(['auth', 'check.admin:admin_warehouse,super_admin'])->group(function () {
@@ -41,4 +47,9 @@ Route::middleware(['auth', 'check.admin:admin_warehouse,super_admin'])->group(fu
 
     // Stock Logs
     Route::get('/admin/warehouse/logs', [AdminWarehouseController::class, 'allStockLogs'])->name('admin.warehouse.logs');
+
+    // Warehouse Custom Orders
+    Route::resource('/admin/warehouse/custom-orders', \App\Http\Controllers\Admin\WarehouseCustomOrderController::class)
+        ->names('admin.warehouse.custom-orders')
+        ->only(['index', 'show']);
 });
