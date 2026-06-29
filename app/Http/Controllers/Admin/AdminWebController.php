@@ -22,6 +22,12 @@ class AdminWebController extends Controller
             'total_products' => Product::count(),
             'total_transactions' => Transaction::count(),
             'recent_transactions' => Transaction::with('user')->latest()->take(10)->get(),
+            // Custom Order statistics
+            'total_custom_orders' => \App\Models\CustomOrder::count(),
+            'custom_orders_waiting_review' => \App\Models\CustomOrder::where('status', 'menunggu_review')->count(),
+            'custom_orders_processing' => \App\Models\CustomOrder::where('status', 'diproses')->count(),
+            'custom_orders_production' => \App\Models\CustomOrder::where('status', 'produksi')->count(),
+            'custom_orders_completed' => \App\Models\CustomOrder::where('status', 'selesai')->count(),
         ]);
     }
 
