@@ -102,4 +102,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(StockLog::class, 'changed_by');
     }
+
+    /**
+     * Get user's chat messages.
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class);
+    }
 }

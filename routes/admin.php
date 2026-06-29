@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AdminWebController;
 use App\Http\Controllers\Admin\AdminWarehouseController;
+use App\Http\Controllers\Admin\AdminChatController;
+use App\Http\Controllers\Admin\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'check.admin:admin_web,super_admin'])->group(function () {
@@ -22,6 +24,11 @@ Route::middleware(['auth', 'check.admin:admin_web,super_admin'])->group(function
     Route::get('/admin/web/transactions', [AdminWebController::class, 'transactions'])->name('admin.web.transactions');
     Route::get('/admin/web/transactions/{transaction}', [AdminWebController::class, 'showTransaction'])->name('admin.web.transactions.show');
     Route::patch('/admin/web/transactions/{transaction}/status', [AdminWebController::class, 'updateTransactionStatus'])->name('admin.web.transactions.update-status');
+
+    // Chat Management
+    Route::get('/admin/web/chat', [AdminChatController::class, 'index'])->name('admin.web.chat.index');
+    Route::get('/admin/web/chat/{user}', [AdminChatController::class, 'show'])->name('admin.web.chat.show');
+    Route::post('/admin/web/chat/{user}', [AdminChatController::class, 'store'])->name('admin.web.chat.store');
 });
 
 Route::middleware(['auth', 'check.admin:admin_warehouse,super_admin'])->group(function () {
@@ -35,4 +42,9 @@ Route::middleware(['auth', 'check.admin:admin_warehouse,super_admin'])->group(fu
 
     // Stock Logs
     Route::get('/admin/warehouse/logs', [AdminWarehouseController::class, 'allStockLogs'])->name('admin.warehouse.logs');
+});
+
+Route::middleware(['auth', 'check.admin:super_admin'])->group(function () {
+    Route::get('/admin/super/dashboard', [SuperAdminController::class, 'dashboard'])->name('admin.super.dashboard');
+    Route::get('/admin/super/reports', [SuperAdminController::class, 'reports'])->name('admin.super.reports');
 });

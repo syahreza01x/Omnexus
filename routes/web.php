@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ChatController;
 use App\Models\Product;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +46,19 @@ Route::middleware('auth')->group(function () {
     Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+
+    // Checkout
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+    // Orders (Riwayat Pesanan)
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{transaction}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{transaction}/proof', [OrderController::class, 'uploadProof'])->name('orders.upload-proof');
+
+    // Chat
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -62,3 +78,4 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
+

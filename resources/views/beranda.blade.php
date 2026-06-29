@@ -752,6 +752,14 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 Profil Saya
                             </a>
+                            <a href="{{ route('chat.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm transition-colors" style="color: var(--muted);" onmouseover="this.style.background='rgba(124,58,237,0.08)'" onmouseout="this.style.background='transparent'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                                Chat Support
+                            </a>
+                            <a href="{{ route('orders.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm transition-colors" style="color: var(--muted);" onmouseover="this.style.background='rgba(124,58,237,0.08)'" onmouseout="this.style.background='transparent'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                                Riwayat Pesanan
+                            </a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors" style="color: var(--muted);" onmouseover="this.style.background='rgba(239,68,68,0.08)'; this.style.color='#ef4444'" onmouseout="this.style.background='transparent'; this.style.color='var(--muted)'">
@@ -1327,15 +1335,22 @@
                     </div>
                     <div style="font-size: 0.75rem; color: var(--muted);">Belum termasuk ongkos kirim</div>
                 </div>
+                <a href="{{ route('checkout') }}"
+                    style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border-radius: 12px; background: #7c3aed; color: white; font-size: 0.92rem; font-weight: 700; text-decoration: none; transition: all 0.3s; position: relative; overflow: hidden; margin-bottom: 10px;"
+                    onmouseover="this.style.background='#6d28d9'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 30px rgba(124,58,237,0.4)'"
+                    onmouseout="this.style.background='#7c3aed'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Checkout
+                </a>
                 <div style="display: flex; gap: 10px;">
                     <button type="button" @click="cartOpen = false"
-                        style="flex: 1; padding: 13px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                        style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;"
                         onmouseover="this.style.background='var(--surface-2)'"
                         onmouseout="this.style.background='transparent'">Lanjut Belanja</button>
                     <form method="POST" action="{{ route('cart.clear') }}" style="flex: 1;">
                         @csrf
                         <button type="submit"
-                            style="width: 100%; padding: 13px; border-radius: 12px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
+                            style="width: 100%; padding: 12px; border-radius: 12px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;"
                             onmouseover="this.style.background='#ef4444'; this.style.color='white'"
                             onmouseout="this.style.background='rgba(239,68,68,0.1)'; this.style.color='#ef4444'">Kosongkan</button>
                     </form>

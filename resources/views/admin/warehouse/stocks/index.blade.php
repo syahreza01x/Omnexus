@@ -6,7 +6,7 @@
     <p class="text-gray-600 dark:text-gray-400 mt-1">Update dan monitor stok produk</p>
 </div>
 
-<div class="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+<div class="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800" x-data="{ editStockId: null }">
     <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
         <form method="GET" action="{{ route('admin.warehouse.stocks') }}" class="flex gap-4">
             <input type="text" name="search" placeholder="Cari produk..." value="{{ request('search') }}" class="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
@@ -77,10 +77,4 @@
         {{ $products->links() }}
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    window.editStockId = null;
-});
-</script>
 @endsection
