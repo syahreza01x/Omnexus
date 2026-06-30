@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', productModalOpen: false, cartOpen: false, selectedProduct: null, navScrolled: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); window.addEventListener('scroll', () => { navScrolled = window.scrollY > 20 })" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', productModalOpen: false, cartOpen: false, selectedProduct: null, navScrolled: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); window.addEventListener('scroll', () => { navScrolled = window.scrollY > 20 })" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -38,6 +38,8 @@
             --text: #f4f4f5;
             --muted: #71717a;
         }
+
+        html { scroll-behavior: smooth; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -682,13 +684,17 @@
         <div class="nav-inner">
             {{-- Logo --}}
             <a href="/" class="flex items-center gap-2.5 group" style="text-decoration: none;">
-                <div class="relative">
-                    <div class="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:bg-violet-500">
-                        <img src="{{ asset('images/icon.png') }}" alt="Interco" class="h-5 w-5 object-contain brightness-0 invert">
-                    </div>
-                </div>
+                <img src="{{ asset('images/icon.png') }}" alt="Interco" class="h-8 w-8 object-contain transition-transform duration-300 group-hover:scale-105">
                 <span class="text-lg font-bold" style="color: var(--text); transition: color 0.3s;" :style="(navScrolled || !darkMode) ? 'color: var(--text)' : 'color: white'">Interco</span>
             </a>
+
+            {{-- Navigation Links --}}
+            <div class="hidden md:flex items-center justify-center gap-8 flex-1">
+                <a href="#" class="text-sm font-semibold transition-colors duration-200" :style="(navScrolled || !darkMode) ? 'color: var(--text)' : 'color: white'" style="text-decoration: none;">Beranda</a>
+                <a href="#kategori" class="text-sm font-semibold transition-colors duration-200" :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'" onmouseover="this.style.color=(navScrolled || !darkMode) ? 'var(--text)' : 'white'" onmouseout="this.style.color=(navScrolled || !darkMode) ? 'var(--muted)' : 'rgba(255,255,255,0.7)'" style="text-decoration: none;">Kategori</a>
+                <a href="#produk" class="text-sm font-semibold transition-colors duration-200" :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'" onmouseover="this.style.color=(navScrolled || !darkMode) ? 'var(--text)' : 'white'" onmouseout="this.style.color=(navScrolled || !darkMode) ? 'var(--muted)' : 'rgba(255,255,255,0.7)'" style="text-decoration: none;">Produk</a>
+                <a href="#testimoni" class="text-sm font-semibold transition-colors duration-200" :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'" onmouseover="this.style.color=(navScrolled || !darkMode) ? 'var(--text)' : 'white'" onmouseout="this.style.color=(navScrolled || !darkMode) ? 'var(--muted)' : 'rgba(255,255,255,0.7)'" style="text-decoration: none;">Testimoni</a>
+            </div>
 
             {{-- Search --}}
             <div class="hidden md:flex flex-1 max-w-xs mx-8 search-wrap">
@@ -893,7 +899,7 @@
     </section>
 
     {{-- ─── Kategori ─── --}}
-    <section style="padding: 80px 0; background: var(--surface);">
+    <section id="kategori" style="padding: 80px 0; background: var(--surface);">
         <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px;">
             <div class="reveal" style="text-align: center; margin-bottom: 48px;">
                 <div class="section-label" style="margin: 0 auto 12px;">Kategori Produk</div>
@@ -1048,7 +1054,7 @@
     </section>
 
     {{-- ─── Review Section ─── --}}
-    <section class="bg-section-alt" style="padding: 80px 0;">
+    <section id="testimoni" class="bg-section-alt" style="padding: 80px 0;">
         <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px;">
             <div class="reveal" style="text-align: center; margin-bottom: 52px;">
                 <div class="section-label" style="margin: 0 auto 12px;">Testimoni</div>
@@ -1421,7 +1427,44 @@
             }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
             reveals.forEach(el => observer.observe(el));
 
-            // Navbar scroll state handled by Alpine x-init
+            // Manual smooth scroll using requestAnimationFrame
+            function smoothScrollTo(targetY, duration) {
+                const startY = window.pageYOffset;
+                const diff = targetY - startY;
+                let startTime = null;
+
+                function step(currentTime) {
+                    if (!startTime) startTime = currentTime;
+                    const progress = Math.min((currentTime - startTime) / duration, 1);
+                    // easeInOutCubic
+                    const ease = progress < 0.5
+                        ? 4 * progress * progress * progress
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                    window.scrollTo(0, startY + diff * ease);
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    }
+                }
+                requestAnimationFrame(step);
+            }
+
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href === '#') {
+                        e.preventDefault();
+                        smoothScrollTo(0, 800);
+                        return;
+                    }
+                    const target = document.querySelector(href);
+                    if (target) {
+                        e.preventDefault();
+                        const targetY = target.getBoundingClientRect().top + window.pageYOffset - 70;
+                        smoothScrollTo(targetY, 800);
+                    }
+                });
+            });
         });
     </script>
 
