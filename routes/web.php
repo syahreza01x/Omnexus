@@ -40,6 +40,14 @@ Route::get('/', function () {
 })->name('beranda');
 
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+    if ($user->role === 'super_admin') {
+        return redirect()->route('admin.super.dashboard');
+    } elseif ($user->role === 'admin_web') {
+        return redirect()->route('admin.web.dashboard');
+    } elseif ($user->role === 'admin_warehouse') {
+        return redirect()->route('admin.warehouse.dashboard');
+    }
     return redirect()->route('beranda');
 })->middleware(['auth'])->name('dashboard');
 

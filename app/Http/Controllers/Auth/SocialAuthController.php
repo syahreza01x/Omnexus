@@ -78,7 +78,15 @@ class SocialAuthController extends Controller
 
         Auth::login($user, true);
 
-        return redirect()->intended(route('beranda', absolute: false));
+        if ($user->role === 'super_admin') {
+            return redirect()->intended(route('admin.super.dashboard'));
+        } elseif ($user->role === 'admin_web') {
+            return redirect()->intended(route('admin.web.dashboard'));
+        } elseif ($user->role === 'admin_warehouse') {
+            return redirect()->intended(route('admin.warehouse.dashboard'));
+        }
+
+        return redirect()->intended(route('beranda'));
     }
 
     private function uniqueName(string $baseName): string
