@@ -1,152 +1,181 @@
 # Installation Documentation
 
+Panduan lengkap instalasi dan menjalankan proyek Omnexus di lingkungan lokal.
+
+---
+
 ## 1. Persyaratan Sistem
 
-| Software | Versi Minimum | Catatan |
-| :--- | :--- | :--- |
-| **PHP** | >= 8.2 | Aktifkan ekstensi: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `fileinfo`, `bcmath` |
-| **Composer** | >= 2.x | [getcomposer.org](https://getcomposer.org) |
-| **Node.js** | >= 18 | [nodejs.org](https://nodejs.org) |
-| **MySQL** | >= 5.7 | Bisa pakai Laragon, XAMPP, atau MySQL langsung |
-| **Git** | Terbaru | [git-scm.com](https://git-scm.com) |
+| Software | Versi Minimum | Keterangan |
+| --- | --- | --- |
+| PHP | 8.2+ | |
+| Composer | Terbaru | Package manager PHP |
+| Node.js | 18+ | |
+| MySQL | 5.7+ | |
+| Git | Terbaru | |
 
-> **Rekomendasi untuk Windows:** Gunakan **Laragon** karena sudah menyertakan PHP, MySQL, dan Composer secara terpadu.
+Rekomendasi untuk Windows: gunakan [Laragon](https://laragon.org/) yang sudah menyertakan PHP, MySQL, dan server lokal tanpa konfigurasi tambahan.
 
 ---
 
 ## 2. Langkah Instalasi
 
-### Langkah 1 — Clone Repository
+### 1. Clone Repository
+
 ```bash
 git clone <url-repository> Omnexus
 cd Omnexus
 ```
 
-### Langkah 2 — Install Dependency
+### 2. Install Dependency
+
 ```bash
 composer install
 npm install
 ```
 
-### Langkah 3 — Setup File Environment
-Salin file `.env.example` menjadi `.env`:
-```bash
-# Linux / Mac
-cp .env.example .env
+### 3. Setup Environment
 
-# Windows (Command Prompt)
-copy .env.example .env
+Salin file `.env.example` menjadi `.env`:
+
+```bash
+# Linux / macOS
+cp .env.example .env
 
 # Windows (PowerShell)
 Copy-Item .env.example .env
 ```
 
-### Langkah 4 — Setup Database
-Buat database MySQL baru, lalu sesuaikan konfigurasi di `.env`:
+### 4. Generate Application Key
+
+```bash
+php artisan key:generate
+```
+
+### 5. Setup Database
+
+Buat database MySQL baru:
+
+```sql
+CREATE DATABASE Omnexus;
+```
+
+Sesuaikan konfigurasi di file `.env`:
+
 ```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=PBL
+DB_DATABASE=Omnexus
 DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-### Langkah 5 — Isi API Keys (Wajib)
-Edit file `.env` dan isi nilai berikut:
+### 6. Setup Google OAuth
 
-**a. Google OAuth** (untuk fitur Login dengan Google)
-- Buka [Google Cloud Console](https://console.cloud.google.com)
-- Buat/minta kredensial OAuth 2.0 dari ketua tim
-- Tambahkan Redirect URI: `http://127.0.0.1:8000/auth/google/callback`
+Buka [Google Cloud Console](https://console.cloud.google.com), buat project baru, aktifkan Google+ API, lalu buat credentials OAuth 2.0 (tipe: Web application).
+
+Tambahkan Authorized Redirect URI:
+
+```
+http://127.0.0.1:8000/auth/google/callback
+```
+
+Isi nilai credentials ke file `.env`:
+
 ```env
-GOOGLE_CLIENT_ID=isi_disini
-GOOGLE_CLIENT_SECRET=isi_disini
+GOOGLE_CLIENT_ID=client_id_anda.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=client_secret_anda
 GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
 ```
 
-**b. Gemini API Key** (untuk fitur Chatbot AI)
-- Buka [Google AI Studio](https://aistudio.google.com/app/apikey)
-- Buat API Key baru (gratis)
-```env
-GEMINI_API_KEY=isi_disini
-```
+### 7. Jalankan Migration dan Setup Storage
 
-### Langkah 6 — Generate Key & Jalankan Migrasi
 ```bash
-php artisan key:generate
-php artisan migrate --seed
+php artisan migrate
 php artisan storage:link
 php artisan config:clear
 ```
 
-> **Catatan:** `--seed` akan mengisi data awal (FAQ, dll). `storage:link` diperlukan agar foto profil bisa diakses.
+Perintah `storage:link` diperlukan agar foto profil dan bukti pembayaran yang diupload bisa diakses secara publik.
 
-### Langkah 7 — Jalankan Aplikasi
-Buka **dua terminal** secara bersamaan:
+---
 
-**Terminal 1 — Backend (Laravel):**
+## 3. Menjalankan Aplikasi
+
+Buka dua terminal secara bersamaan:
+
+**Terminal 1 — Laravel Server:**
+
 ```bash
 php artisan serve
 ```
 
-**Terminal 2 — Frontend (Vite / CSS):**
+**Terminal 2 — Vite Dev Server:**
+
 ```bash
 npm run dev
 ```
 
-Akses aplikasi di browser: **http://127.0.0.1:8000**
+Aplikasi dapat diakses di `http://127.0.0.1:8000`.
 
----
+Alternatif, jalankan semua sekaligus dengan satu perintah:
 
-## 3. Membuat Akun Super Admin
-
-Setelah migrasi selesai, buat akun admin melalui Tinker:
 ```bash
-php artisan tinker
+composer run dev
 ```
-Lalu jalankan:
-```php
-\App\Models\User::create([
-    'name'     => 'superadmin',
-    'email'    => 'admin@interco.com',
-    'password' => bcrypt('password_anda'),
-    'role'     => 'super_admin',
-]);
+
+Perintah ini menggunakan `concurrently` untuk menjalankan Laravel server, Vite, queue listener, dan log viewer dalam satu terminal.
+
+### Build untuk Production
+
+```bash
+npm run build
 ```
 
 ---
 
-## 4. Troubleshooting
+## 4. Environment Variables Penting
 
-**Error: `Session::has` atau error setelah `SESSION_ENCRYPT=true`**
-> Sesi lama tidak kompatibel setelah enkripsi diaktifkan. Hapus file sesi lama:
+| Variable | Nilai Default | Keterangan |
+| --- | --- | --- |
+| `APP_NAME` | `Omnexus` | Nama aplikasi |
+| `APP_ENV` | `local` | Environment (`local` atau `production`) |
+| `APP_URL` | `http://127.0.0.1:8000` | URL dasar aplikasi |
+| `DB_DATABASE` | `Omnexus` | Nama database MySQL |
+| `DB_USERNAME` | `root` | Username database |
+| `DB_PASSWORD` | *(kosong)* | Password database |
+| `GOOGLE_CLIENT_ID` | — | Wajib diisi — dari Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | — | Wajib diisi — dari Google Cloud Console |
+| `GOOGLE_REDIRECT_URI` | — | URL callback Google OAuth |
+| `SESSION_DRIVER` | `cookie` | Driver session (`cookie` atau `database`) |
+
+---
+
+## 5. Troubleshooting
+
+**Error "404 Not Found" pada Google Callback**
+
+Jalankan `php artisan route:clear`, pastikan `APP_URL` di `.env` sesuai dengan URL yang digunakan, lalu restart server.
+
+**Error "InvalidStateException" dari Google**
+
+Jalankan `php artisan cache:clear && php artisan config:clear`. Pastikan cookies diterima di browser dan jangan gunakan mode incognito saat testing.
+
+**Foto Profil atau Bukti Pembayaran Tidak Muncul**
+
+Pastikan perintah `php artisan storage:link` sudah berhasil dijalankan, lalu restart server dan coba upload ulang.
+
+**Database Error / Tabel Tidak Ditemukan**
+
+Pastikan MySQL sudah berjalan, konfigurasi DB di `.env` sudah benar, lalu jalankan `php artisan migrate`.
+
+**Halaman Putih / Error 500**
+
+Jalankan:
+
 ```bash
-php artisan cache:clear
 php artisan config:clear
-# Hapus file di storage/framework/sessions/ secara manual jika perlu
+php artisan cache:clear
+php artisan view:clear
 ```
-
-**Error: "404 Not Found" pada Google Callback**
-> Jalankan `php artisan route:clear`, pastikan `APP_URL` di `.env` sudah benar (`http://127.0.0.1:8000`), lalu restart server.
-
-**Error: "InvalidStateException" dari Google**
-> Jalankan `php artisan cache:clear` dan `php artisan config:clear`. Pastikan cookies diizinkan di browser Anda.
-
-**Foto Profil tidak Muncul**
-> Pastikan perintah `php artisan storage:link` sudah berhasil. Coba restart server jika perlu.
-
-**Error: "Class not found" setelah pull**
-> Jalankan `composer dump-autoload` untuk memperbarui autoloader setelah ada file PHP baru.
-
-**Tampilan CSS tidak berubah setelah pull**
-> Pastikan `npm run dev` sedang berjalan. Jika perlu, jalankan `npm run build` untuk build ulang aset.
-
----
-
-## 5. Catatan untuk Anggota Tim
-
-- **Jangan commit file `.env`** — file ini sudah ada di `.gitignore` dan berisi rahasia pribadi
-- Setelah setiap `git pull`, selalu cek apakah ada migrasi baru dengan: `php artisan migrate`
-- Jika ada perubahan `composer.json`, jalankan: `composer install`
-- Jika ada perubahan `package.json`, jalankan: `npm install`
