@@ -42,6 +42,7 @@ class AdminCustomOrderController extends Controller
         $statuses = [
             'menunggu_review' => 'Menunggu Review',
             'menunggu_persetujuan_customer' => 'Menunggu Persetujuan Customer',
+            'revisi_desain' => 'Revisi Pesanan',
             'diproses' => 'Diproses',
             'produksi' => 'Produksi',
             'siap_diambil_dikirim' => 'Siap Diambil / Dikirim',
@@ -59,6 +60,7 @@ class AdminCustomOrderController extends Controller
         $statuses = [
             'menunggu_review' => 'Menunggu Review',
             'menunggu_persetujuan_customer' => 'Menunggu Persetujuan Customer',
+            'revisi_desain' => 'Revisi Pesanan',
             'diproses' => 'Diproses',
             'produksi' => 'Produksi',
             'siap_diambil_dikirim' => 'Siap Diambil / Dikirim',
@@ -74,8 +76,23 @@ class AdminCustomOrderController extends Controller
     public function update(Request $request, CustomOrder $customOrder): RedirectResponse
     {
         $validated = $request->validate([
-            'status' => ['required', 'string', 'in:menunggu_review,menunggu_persetujuan_customer,diproses,produksi,siap_diambil_dikirim,selesai'],
+            'status' => ['required', 'string', 'in:menunggu_review,menunggu_persetujuan_customer,revisi_desain,diproses,produksi,siap_diambil_dikirim,selesai'],
+            'admin_mockup_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,ai,cdr', 'max:10240'],
         ]);
+
+        if ($request->hasFile('admin_mockup_file')) {
+            // Delete old mockup if exists
+            if ($customOrder->admin_mockup_file) {
+                Storage::disk('public')->delete($customOrder->admin_mockup_file);
+            }
+            $path = $request->file('admin_mockup_file')->store('mockup_files', 'public');
+            $validated['admin_mockup_file'] = $path;
+            
+            // Auto transition to customer review state
+            if (in_array($customOrder->status, ['menunggu_review', 'revisi_desain'])) {
+                $validated['status'] = 'menunggu_persetujuan_customer';
+            }
+        }
 
         $customOrder->update($validated);
 

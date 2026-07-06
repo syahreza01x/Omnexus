@@ -63,6 +63,8 @@ Route::middleware('auth')->group(function () {
 
     // Custom Order Routes
     Route::get('/custom-orders/export/csv', [\App\Http\Controllers\CustomOrderController::class, 'exportCsv'])->name('custom-orders.export');
+    Route::post('/custom-orders/{customOrder}/approve-mockup', [\App\Http\Controllers\CustomOrderController::class, 'approveMockup'])->name('custom-orders.approve-mockup');
+    Route::post('/custom-orders/{customOrder}/request-revision', [\App\Http\Controllers\CustomOrderController::class, 'requestRevision'])->name('custom-orders.request-revision');
     Route::resource('custom-orders', \App\Http\Controllers\CustomOrderController::class)->only(['index', 'create', 'store', 'show']);
 });
 

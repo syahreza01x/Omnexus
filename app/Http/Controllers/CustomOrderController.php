@@ -130,4 +130,50 @@ class CustomOrderController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    /**
+     * Approve the custom order mockup.
+     */
+    public function approveMockup(CustomOrder $customOrder): RedirectResponse
+    {
+        if ($customOrder->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $customOrder->update([
+            'status' => 'diproses'
+        ]);
+
+        return redirect()->back()->with('success', 'Desain mockup berhasil disetujui. Pesanan Anda kini sedang diproses.');
+    }
+
+    /**
+     * Request a revision for the custom order.
+     */
+    public function requestRevision(Request $request, CustomOrder $customOrder): RedirectResponse
+    {
+        if ($customOrder->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'revision_notes' => 'required|string|max:1000',
+            'new_design_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,ai,cdr|max:10240'
+        ]);
+
+        $updateData = [
+            'status' => 'revisi_desain',
+            'revision_notes' => $request->revision_notes,
+            'revision_count' => $customOrder->revision_count + 1
+        ];
+
+        if ($request->hasFile('new_design_file')) {
+            $path = $request->file('new_design_file')->store('design_files', 'public');
+            $updateData['design_file'] = $path; // update reference design file
+        }
+
+        $customOrder->update($updateData);
+
+        return redirect()->back()->with('success', 'Permintaan revisi berhasil dikirim.');
+    }
 }

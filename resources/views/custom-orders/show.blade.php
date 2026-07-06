@@ -42,7 +42,11 @@
         ];
     @endphp
 
+<<<<<<< Updated upstream
     <div class="py-12 bg-gray-50/50 dark:bg-gray-955/20">
+=======
+    <div class="py-12 bg-gray-50/50 dark:bg-gray-955/20" x-data="{ showRevisionModal: false }">
+>>>>>>> Stashed changes
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
 
             {{-- ─── Timeline Stepper Card ─── --}}
@@ -225,7 +229,95 @@
                 </div>
             </div>
 
+            {{-- Alert Toast / Success Message --}}
+            @if(session('success'))
+                <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/50 dark:text-emerald-400 flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <span class="text-sm font-semibold">{{ session('success') }}</span>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {{-- Mockup Review Card --}}
+                @if($customOrder->status === 'menunggu_persetujuan_customer' || $customOrder->status === 'revisi_desain' || $customOrder->admin_mockup_file)
+                    <div class="md:col-span-2 bg-white dark:bg-gray-900 overflow-hidden shadow-xl sm:rounded-3xl border border-gray-100 dark:border-gray-800 p-6 md:p-8 space-y-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Mockup Desain
+                        </h3>
+
+                        @if($customOrder->admin_mockup_file)
+                            @php
+                                $mockupExtension = pathinfo($customOrder->admin_mockup_file, PATHINFO_EXTENSION);
+                                $isImage = in_array(strtolower($mockupExtension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                            @endphp
+
+                            @if($isImage)
+                                <div class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-955/20 p-2 flex justify-center">
+                                    <img src="{{ asset('storage/' . $customOrder->admin_mockup_file) }}" alt="Mockup Desain" class="max-h-96 object-contain rounded-xl">
+                                </div>
+                            @else
+                                <div class="flex items-center gap-3 p-4 rounded-2xl border border-purple-100/50 dark:border-purple-950/40 bg-purple-50/20 dark:bg-purple-950/10">
+                                    <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-bold text-gray-700 dark:text-gray-300 truncate">
+                                            {{ basename($customOrder->admin_mockup_file) }}
+                                        </p>
+                                        <p class="text-xs text-gray-400 mt-0.5">Berkas Mockup</p>
+                                    </div>
+                                    <a href="{{ asset('storage/' . $customOrder->admin_mockup_file) }}" target="_blank" class="px-4 py-2 bg-purple-605 hover:bg-purple-700 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition">
+                                        Unduh
+                                    </a>
+                                </div>
+                            @endif
+                        @else
+                            <div class="p-6 rounded-2xl border border-dashed border-gray-250 dark:border-gray-800 text-center">
+                                <svg class="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 font-semibold">Mockup desain belum diunggah oleh admin.</p>
+                            </div>
+                        @endif
+
+                        @if($customOrder->revision_notes)
+                            <div class="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-250 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400">
+                                <span class="text-xs font-bold uppercase tracking-wider block mb-1">Catatan Revisi Terakhir (Revisi ke-{{ $customOrder->revision_count }}):</span>
+                                <p class="text-sm leading-relaxed font-medium">{{ $customOrder->revision_notes }}</p>
+                            </div>
+                        @endif
+
+                        @if($customOrder->status === 'menunggu_persetujuan_customer')
+                            <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                <form action="{{ route('custom-orders.approve-mockup', $customOrder) }}" method="POST" class="flex-1">
+                                    @csrf
+                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 shadow-md shadow-emerald-500/20 focus:outline-none">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Setujui Desain & Mulai Produksi
+                                    </button>
+                                </form>
+                                
+                                <button type="button" @click="showRevisionModal = true" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl text-xs uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 shadow-md shadow-amber-500/20 focus:outline-none">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Ajukan Revisi Pesanan
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+>>>>>>> Stashed changes
                 {{-- Detail Order Card --}}
                 <div class="md:col-span-2 bg-white dark:bg-gray-900 overflow-hidden shadow-xl sm:rounded-3xl border border-gray-100 dark:border-gray-800 p-6 md:p-8 space-y-6">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 flex items-center gap-2">
@@ -354,8 +446,242 @@
                         @endif
                     </div>
                 </div>
-            </div>
+                       {{-- ─── Modal Pengajuan Revisi ─── --}}
+            <div x-show="showRevisionModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div x-show="showRevisionModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                    <div x-show="showRevisionModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-middle bg-white dark:bg-gray-900 rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-800 p-6 md:p-8 space-y-6" @click.away="showRevisionModal = false">
+                        <div class="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-4">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white" id="modal-title">
+                                Ajukan Revisi Pesanan Custom
+                            </h3>
+                            <button @click="showRevisionModal = false" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <form action="{{ route('custom-orders.request-revision', $customOrder) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                            @csrf
+                            <div>
+                                <label for="revision_notes" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Catatan Revisi <span class="text-red-500">*</span></label>
+                                <textarea name="revision_notes" id="revision_notes" rows="4" required placeholder="Tuliskan secara detail bagian desain atau spesifikasi produk yang ingin direvisi (contoh: ukuran logo diperbesar 15%, warna kaos diganti Navy, dll.)" class="w-full rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-955 text-gray-900 dark:text-white px-4 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 focus:outline-none transition"></textarea>
+                            </div>
+
+                            <div>
+                                <label for="new_design_file" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Upload File Acuan Baru (Opsional)</label>
+                                <input type="file" name="new_design_file" id="new_design_file" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 dark:file:bg-purple-900/30 dark:file:text-purple-400 hover:file:bg-purple-100 transition">
+                                <p class="text-[10px] text-gray-450 mt-1">Mendukung: JPG, JPEG, PNG, PDF, AI, CDR. Maksimal 10MB.</p>
+                            </div>
+
+                            <div class="flex justify-end gap-3 border-t border-gray-100 dark:border-gray-800 pt-6">
+                                <button type="button" @click="showRevisionModal = false" class="px-5 py-2.5 border border-gray-250 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                                    Batal
+                                </button>
+@endif
+
+                        @if($customOrder->revision_notes)
+                            <div class="mt-4 p-4 rounded-2xl bg-amber-50 border border-amber-250 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400">
+                                <span class="text-xs font-bold uppercase tracking-wider block mb-1">Catatan Revisi Terakhir (Revisi ke-{{ $customOrder->revision_count }}):</span>
+                                <p class="text-sm leading-relaxed font-medium">{{ $customOrder->revision_notes }}</p>
+                            </div>
+                        @endif
+
+                        @if($customOrder->status === 'menunggu_persetujuan_customer')
+                            <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                <form action="{{ route('custom-orders.approve-mockup', $customOrder) }}" method="POST" class="flex-1">
+                                    @csrf
+                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 shadow-md shadow-emerald-500/20 focus:outline-none">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Setujui Desain & Mulai Produksi
+                                    </button>
+                                </form>
+                                
+                                <button type="button" @click="showRevisionModal = true" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl text-xs uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 shadow-md shadow-amber-500/20 focus:outline-none">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Ajukan Revisi Pesanan
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- Detail Order Card --}}
+                <div class="md:col-span-2 bg-white dark:bg-gray-900 overflow-hidden shadow-xl sm:rounded-3xl border border-gray-100 dark:border-gray-800 p-6 md:p-8 space-y-6">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-800 pb-3 flex items-center gap-2">
+                        Spesifikasi Custom Order
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Kategori Pesanan</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1 block">
+                                {{ ucfirst($customOrder->category) }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Produk</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1 block">
+                                @if($customOrder->product === 'lainnya')
+                                    {{ $customOrder->other_product_name }} <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Lainnya)</span>
+                                @else
+                                    {{ $customOrder->product }}
+                                @endif
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Jumlah</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1 block">
+                                {{ number_format($customOrder->quantity) }} Pcs
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Warna</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1 block">
+                                {{ $customOrder->color }}
+                            </span>
+                        </div>
+                        
+                        @if($customOrder->category === 'konveksi')
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Ukuran</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1 block">
+                                    {{ $customOrder->size ?? '-' }}
+                                </span>
+                            </div>
+                        @endif
+
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Jenis Bahan</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1 block">
+                                {{ $customOrder->material_type }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Teknik Produksi</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1 block">
+                                {{ $customOrder->production_technique }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block">Deadline</span>
+                            <span class="text-sm font-extrabold text-gray-900 dark:text-white mt-1 block">
+                                {{ $customOrder->deadline->format('d F Y') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    @if($customOrder->notes)
+                        <div class="bg-gray-50/50 dark:bg-gray-950/20 rounded-2xl p-5 border border-gray-100 dark:border-gray-800">
+                            <span class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider block mb-2">Catatan Tambahan</span>
+                            <p class="text-sm text-gray-750 dark:text-gray-300 leading-relaxed font-medium">{{ $customOrder->notes }}</p>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Contact & File Sidebar --}}
+                <div class="bg-white dark:bg-gray-900 overflow-hidden shadow-xl sm:rounded-3xl border border-gray-100 dark:border-gray-800 p-6 md:p-8 space-y-6">
+                    <div>
+                        <h3 class="text-md font-bold text-gray-900 dark:text-white mb-4">
+                            Informasi Pemesan
+                        </h3>
+                        <div class="space-y-4 text-sm font-medium">
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 block uppercase tracking-wider">Nama Pemesan</span>
+                                <span class="text-gray-800 dark:text-gray-200 mt-1 block">{{ $customOrder->customer_name }}</span>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-gray-400 block uppercase tracking-wider">Nomor WhatsApp</span>
+                                <span class="text-gray-850 dark:text-gray-200 mt-1 block font-mono">{{ $customOrder->whatsapp_number }}</span>
+                            </div>
+                            <div class="border-t border-gray-100 dark:border-gray-800 pt-3">
+                                <span class="text-[10px] text-gray-400 block uppercase tracking-wider">Nama Akun Login</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-450 mt-0.5 block">{{ $customOrder->user->name }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100 dark:border-gray-800 pt-4">
+                        <h3 class="text-md font-bold text-gray-900 dark:text-white mb-4">
+                            Berkas Desain
+                        </h3>
+                        @if ($customOrder->design_file)
+                            <div class="flex items-center gap-3 p-3.5 rounded-2xl border border-purple-100/50 dark:border-purple-950/40 bg-purple-50/20 dark:bg-purple-950/10 mb-4">
+                                <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    @php
+                                        $fileName = basename($customOrder->design_file);
+                                    @endphp
+                                    <p class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate" title="{{ $fileName }}">
+                                        {{ $fileName }}
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">Berkas Terunggah</p>
+                                </div>
+                            </div>
+                            
+                            <a href="{{ route('admin.web.custom-orders.download', $customOrder) }}" class="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-2xl text-xs uppercase tracking-wider transition-all duration-300 hover:-translate-y-0.5 shadow-md shadow-purple-500/20 focus:outline-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Unduh Desain
+                            </a>
+                        @else
+                            <p class="text-xs text-red-500 font-bold">Tidak ada file desain yang diunggah.</p>
+                        @endif
+                    </div>
+                </div>
+                       {{-- ─── Modal Pengajuan Revisi ─── --}}
+            <div x-show="showRevisionModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div x-show="showRevisionModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                    <div x-show="showRevisionModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-middle bg-white dark:bg-gray-900 rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-800 p-6 md:p-8 space-y-6" @click.away="showRevisionModal = false">
+                        <div class="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 pb-4">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white" id="modal-title">
+                                Ajukan Revisi Pesanan Custom
+                            </h3>
+                            <button @click="showRevisionModal = false" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <form action="{{ route('custom-orders.request-revision', $customOrder) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                            @csrf
+                            <div>
+                                <label for="revision_notes" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Catatan Revisi <span class="text-red-500">*</span></label>
+                                <textarea name="revision_notes" id="revision_notes" rows="4" required placeholder="Tuliskan secara detail bagian desain atau spesifikasi produk yang ingin direvisi (contoh: ukuran logo diperbesar 15%, warna kaos diganti Navy, dll.)" class="w-full rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-955 text-gray-900 dark:text-white px-4 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 focus:outline-none transition"></textarea>
+                            </div>
+
+                            <div>
+                                <label for="new_design_file" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Upload File Acuan Baru (Opsional)</label>
+                                <input type="file" name="new_design_file" id="new_design_file" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 dark:file:bg-purple-900/30 dark:file:text-purple-400 hover:file:bg-purple-100 transition">
+                                <p class="text-[10px] text-gray-450 mt-1">Mendukung: JPG, JPEG, PNG, PDF, AI, CDR. Maksimal 10MB.</p>
+                            </div>
+
+                            <div class="flex justify-end gap-3 border-t border-gray-100 dark:border-gray-800 pt-6">
+                                <button type="button" @click="showRevisionModal = false" class="px-5 py-2.5 border border-gray-250 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                                    Batal
+                                </button>
+                                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-2xl text-sm transition duration-150 shadow-lg shadow-purple-500/20">
+                                    Kirim Revisi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

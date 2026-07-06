@@ -22,6 +22,21 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     {{-- Main Order details --}}
     <div class="lg:col-span-2 space-y-6">
+        @if($customOrder->status === 'revisi_desain' && $customOrder->revision_notes)
+            <div class="bg-red-50 border border-red-200 dark:bg-red-950/20 dark:border-red-900/50 rounded-2xl p-6 space-y-3">
+                <div class="flex items-center gap-2.5 text-red-700 dark:text-red-400">
+                    <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <h4 class="font-bold text-md">Permintaan Revisi dari Customer (Revisi ke-{{ $customOrder->revision_count }})</h4>
+                </div>
+                <div class="text-sm text-red-850 dark:text-red-300 bg-white/50 dark:bg-gray-955/30 p-4 rounded-xl font-medium border border-red-105 dark:border-red-950">
+                    {{ $customOrder->revision_notes }}
+                </div>
+                <p class="text-xs text-red-650 dark:text-red-400 font-semibold">Silakan perbaiki mockup desain dan unggah ulang berkas mockup yang baru di kolom sebelah kanan untuk mengirimkan draf perbaikan ke customer.</p>
+            </div>
+        @endif
+
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100 dark:border-gray-700 p-6 md:p-8 space-y-6">
             <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-3">
                 Spesifikasi Pesanan
@@ -100,10 +115,10 @@
         {{-- Change Status Card --}}
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100 dark:border-gray-700 p-6 md:p-8 space-y-4">
             <h3 class="text-md font-bold text-gray-900 dark:text-white mb-2">
-                Ubah Status Custom Order
+                Kelola Pesanan & Status
             </h3>
             
-            <form action="{{ route('admin.web.custom-orders.update', $customOrder) }}" method="POST" class="space-y-4">
+            <form action="{{ route('admin.web.custom-orders.update', $customOrder) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 @method('PATCH')
                 
@@ -115,9 +130,24 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="border-t border-gray-150 dark:border-gray-700 pt-3">
+                    <label for="admin_mockup_file" class="block text-xs text-gray-400 mb-2 uppercase tracking-wide">Unggah Mockup Desain (Visual/PDF)</label>
+                    <input type="file" name="admin_mockup_file" id="admin_mockup_file" class="w-full text-xs text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 dark:file:bg-purple-900/30 dark:file:text-purple-400 hover:file:bg-purple-100 transition">
+                    <p class="text-[10px] text-gray-450 mt-1">Mengunggah mockup baru akan otomatis mengubah status menjadi 'Menunggu Persetujuan Customer'.</p>
+                </div>
+
+                @if($customOrder->admin_mockup_file)
+                    <div class="p-3 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-150 dark:border-gray-700 flex items-center justify-between gap-2">
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[10px] text-gray-400 block">Mockup Terunggah</span>
+                            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate block">{{ basename($customOrder->admin_mockup_file) }}</span>
+                        </div>
+                        <a href="{{ asset('storage/' . $customOrder->admin_mockup_file) }}" target="_blank" class="text-xs font-bold text-purple-600 hover:text-purple-700">Lihat</a>
+                    </div>
+                @endif
                 
                 <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl text-sm transition duration-150 shadow-md">
-                    Simpan Perubahan Status
+                    Simpan Perubahan
                 </button>
             </form>
         </div>
