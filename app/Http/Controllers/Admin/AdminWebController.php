@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class AdminWebController extends Controller
@@ -68,7 +69,15 @@ class AdminWebController extends Controller
             'unit' => ['required', 'in:piece,kg,meter,liter,dozen,box'],
             'category' => ['nullable', 'string'],
             'specifications' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:15360'],
+            'is_active' => ['boolean'],
         ]);
+
+        $validated['is_active'] = $request->boolean('is_active', true);
+
+        if ($request->hasFile('image')) {
+            $validated['image_path'] = $request->file('image')->store('product-images', 'public');
+        }
 
         Product::create($validated);
 
@@ -96,8 +105,18 @@ class AdminWebController extends Controller
             'unit' => ['required', 'in:piece,kg,meter,liter,dozen,box'],
             'category' => ['nullable', 'string'],
             'specifications' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:15360'],
             'is_active' => ['boolean'],
         ]);
+
+        $validated['is_active'] = $request->boolean('is_active');
+
+        if ($request->hasFile('image')) {
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            $validated['image_path'] = $request->file('image')->store('product-images', 'public');
+        }
 
         $product->update($validated);
 

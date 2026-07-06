@@ -6,7 +6,7 @@
 </div>
 
 <div class="max-w-2xl rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-    <form method="POST" action="{{ route('admin.web.products.update', $product) }}" class="space-y-6">
+    <form method="POST" action="{{ route('admin.web.products.update', $product) }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PATCH')
 
@@ -52,8 +52,14 @@
         </div>
 
         <div>
-            <label for="specifications" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Spesifikasi</label>
-            <textarea id="specifications" name="specifications" rows="4" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">{{ $product->specifications }}</textarea>
+            <label for="image" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Gambar Produk</label>
+            @if($product->image_path)
+                <div class="mb-3">
+                    <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="h-32 w-32 object-cover rounded-lg border dark:border-gray-700">
+                </div>
+            @endif
+            <input id="image" name="image" type="file" class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+            @error('image')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
 
         <div>
