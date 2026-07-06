@@ -247,7 +247,6 @@
             <!-- Page Content -->
             <div class="flex-1 overflow-auto p-6 md:p-8">
                 <div class="max-w-7xl mx-auto">
-<<<<<<< HEAD
                     {{-- ─── Toast Notification ─── --}}
                     @if(session('success'))
                     <div x-data="{ show: true, progress: 100 }" 
@@ -277,23 +276,6 @@
                             </div>
                             <button @click="show = false" class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-=======
-                    @if (session('success'))
-                        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
-                            class="mb-6 rounded-2xl border border-green-200 bg-green-50 px-6 py-4 flex items-center justify-between dark:border-green-900/50 dark:bg-green-900/20">
-                            <div class="flex items-center gap-3 text-green-700 dark:text-green-400 font-medium">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {{ session('success') }}
-                            </div>
-                            <button @click="show = false" class="text-green-500 hover:text-green-700">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12" />
-                                </svg>
->>>>>>> Reza
                             </button>
                         </div>
                         <div class="h-1 bg-gray-100 dark:bg-gray-800 w-full">

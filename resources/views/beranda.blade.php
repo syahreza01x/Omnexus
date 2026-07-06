@@ -701,7 +701,6 @@
                 <a href="#kategori" class="text-sm font-semibold transition-all duration-300" :class="(navScrolled || !darkMode) ? 'text-gray-800 hover:text-violet-600 dark:text-white dark:hover:text-violet-400' : 'text-white/85 hover:text-white'">Kategori</a>
                 <a href="#testimoni" class="text-sm font-semibold transition-all duration-300" :class="(navScrolled || !darkMode) ? 'text-gray-800 hover:text-violet-600 dark:text-white dark:hover:text-violet-400' : 'text-white/85 hover:text-white'">Testimoni</a>
             </div>
-            </div>
 
             {{-- Right Actions --}}
             <div class="flex items-center gap-1 md:gap-2">
