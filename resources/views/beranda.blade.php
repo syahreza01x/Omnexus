@@ -1,7 +1,40 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', productModalOpen: false, cartOpen: false, customOrderOpen: false, selectedProduct: null, navScrolled: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); window.addEventListener('scroll', () => { navScrolled = window.scrollY > 20 })" :class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true',
+    productModalOpen: false,
+    cartOpen: false,
+    customOrderOpen: false,
+    selectedProduct: null,
+    navScrolled: false,
+    modalQty: 1,
+    formatRp(amount) {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+    },
+    cartItems: window.initialCartItems || [],
+    get cartSubtotal() {
+        return this.cartItems.reduce((total, item) => total + (item.qty * item.price), 0);
+    },
+    get currentCartCount() {
+        return this.cartItems.reduce((sum, item) => sum + parseInt(item.qty), 0);
+    },
+    updateCartAjax(productId, qty) {
+        fetch(`/cart/${productId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' },
+            body: JSON.stringify({ _method: 'PATCH', quantity: qty })
+        });
+    }
+}" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); window.addEventListener('scroll', () => { navScrolled = window.scrollY > 20 })" :class="{ 'dark': darkMode }">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        window.initialCartItems = {!! \Illuminate\Support\Js::from(collect($cart ?? [])->map(function($i) use ($cartProducts) {
+            $p = isset($i['product_id']) ? $cartProducts->get((int)$i['product_id']) : null;
+            return $p ? ['id' => $p->id, 'qty' => (int)$i['quantity'], 'price' => (float)$p->price] : null;
+        })->filter()->values()) !!};
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Interco — Wujudkan Pakaian Impianmu</title>
     <meta name="description" content="Custom order pakaian premium. Desain bebas, bahan berkualitas, pengerjaan cepat.">
@@ -675,6 +708,320 @@
             border-color: var(--border);
             color: var(--text);
         }
+
+        /* ─── Mobile Hamburger Button ─── */
+        .mobile-menu-btn {
+            display: none;
+            padding: 8px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s;
+        }
+        .mobile-menu-btn:hover {
+            background: rgba(124,58,237,0.08);
+        }
+
+        /* ─── Mobile Nav Drawer ─── */
+        .mobile-nav-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 150;
+        }
+        .mobile-nav-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(320px, 85vw);
+            background: var(--surface);
+            z-index: 151;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+        }
+        .dark .mobile-nav-drawer {
+            background: #0f0f13;
+        }
+        .mobile-nav-drawer.open {
+            transform: translateX(0);
+        }
+        .mobile-nav-backdrop.open {
+            display: block;
+        }
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            text-decoration: none;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border);
+        }
+        .mobile-nav-link:hover {
+            background: rgba(124,58,237,0.06);
+        }
+        .mobile-nav-link svg {
+            width: 20px;
+            height: 20px;
+            color: var(--muted);
+        }
+
+        /* ─── Responsive: Hero grid ─── */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+        }
+        .hero-visual-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 20px;
+        }
+        .hero-stats-row {
+            display: flex;
+            gap: 32px;
+            margin-top: 56px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        /* ─── Responsive: Category grid ─── */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+        /* ─── Responsive: Product grid ─── */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        /* ─── Responsive: Feature grid ─── */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        /* ─── Responsive: Review grid ─── */
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        /* ─── Responsive: Footer grid ─── */
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        /* ─── Responsive: Modal grid ─── */
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 500px;
+        }
+        /* ─── Responsive: Form grid ─── */
+        .form-grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        /* ─── Responsive: Custom order grid ─── */
+        .custom-order-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        /* ─── Responsive: Product section header ─── */
+        .section-header-flex {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 48px;
+        }
+
+        /* ═══════ MEDIA QUERIES ═══════ */
+
+        /* Tablet & below (max 1024px) */
+        @media (max-width: 1024px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .hero-visual-grid {
+                max-width: 480px;
+                margin: 0 auto;
+            }
+            .category-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Mobile & below (max 768px) */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .nav-desktop-only {
+                display: none !important;
+            }
+
+            .hero-grid {
+                gap: 32px;
+            }
+            .hero-title {
+                font-size: clamp(2rem, 8vw, 2.8rem) !important;
+            }
+            .hero-desc {
+                font-size: 0.95rem;
+            }
+            .hero-stats-row {
+                gap: 20px;
+                margin-top: 36px;
+                padding-top: 24px;
+                flex-wrap: wrap;
+            }
+            .hero-stats-row > div:not(:empty) > div:first-child {
+                font-size: 1.4rem !important;
+            }
+            .hero-visual-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                padding: 12px;
+            }
+            .category-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .feature-card {
+                padding: 24px;
+            }
+            .review-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .review-card {
+                padding: 20px;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            .modal-grid {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+            .modal-grid > div:first-child {
+                max-height: 240px;
+                border-radius: 28px 28px 0 0 !important;
+            }
+            .modal-content {
+                border-radius: 24px;
+                max-height: 90vh;
+            }
+            .modal-grid > div:last-child {
+                padding: 24px 20px !important;
+                max-height: none !important;
+            }
+            .form-grid-2col {
+                grid-template-columns: 1fr;
+            }
+            .custom-order-form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .section-header-flex {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .btn-primary {
+                padding: 12px 22px;
+                font-size: 0.85rem;
+            }
+            .btn-ghost {
+                padding: 12px 22px;
+                font-size: 0.85rem;
+            }
+            .section-title {
+                font-size: clamp(1.4rem, 5vw, 1.8rem);
+            }
+        }
+
+        /* Small mobile (max 480px) */
+        @media (max-width: 480px) {
+            .hero-visual-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 8px;
+            }
+            .hero-visual-grid .hero-card:nth-child(2) {
+                margin-top: 0 !important;
+            }
+            .hero-visual-grid .hero-card:last-child {
+                grid-column: span 1 !important;
+            }
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .product-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .hero-stats-row {
+                gap: 16px;
+            }
+            .hero-stats-row .stat-divider {
+                display: none;
+            }
+            .nav-inner {
+                padding: 0 16px;
+            }
+            .cart-item {
+                padding: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -733,7 +1080,7 @@
                     :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'"
                     :class="(navScrolled || !darkMode) ? 'hover:bg-gray-100 dark:hover:bg-zinc-800' : 'hover:bg-white/10'">
                     @if($cartCount > 0)
-                        <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-zinc-950">{{ $cartCount }}</span>
+                        <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet-600 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-zinc-950" x-text="currentCartCount"></span>
                     @endif
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
@@ -742,7 +1089,7 @@
                 @endauth
 
                 @auth
-                    <div x-data="{ open: false }" class="relative">
+                    <div x-data="{ open: false }" class="relative hidden md:block nav-desktop-only">
                         <button @click="open = !open"
                             class="flex items-center justify-center w-9 h-9 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-500 transition-all duration-200">
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
@@ -757,10 +1104,6 @@
                             <a href="{{ route('profile.edit') }}" class="flex items-center gap-2 px-4 py-2 text-sm transition-colors" style="color: var(--muted);" onmouseover="this.style.background='rgba(124,58,237,0.08)'" onmouseout="this.style.background='transparent'">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 Profil Saya
-                            </a>
-                            <a href="{{ route('chat.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm transition-colors" style="color: var(--muted);" onmouseover="this.style.background='rgba(124,58,237,0.08)'" onmouseout="this.style.background='transparent'">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                                Chat Support
                             </a>
                             <a href="{{ route('orders.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm transition-colors" style="color: var(--muted);" onmouseover="this.style.background='rgba(124,58,237,0.08)'" onmouseout="this.style.background='transparent'">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
@@ -780,13 +1123,95 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="btn-primary" style="padding: 10px 20px; font-size: 0.85rem;">
+                    <a href="{{ route('login') }}" class="btn-primary hidden md:inline-flex nav-desktop-only" style="padding: 10px 20px; font-size: 0.85rem;">
                         Masuk
                     </a>
                 @endauth
+
+                {{-- Mobile Hamburger Button --}}
+                <button class="mobile-menu-btn md:hidden" onclick="document.getElementById('mobileNavDrawer').classList.add('open'); document.getElementById('mobileNavBackdrop').classList.add('open');" :style="(navScrolled || !darkMode) ? 'color: var(--muted)' : 'color: rgba(255,255,255,0.7)'">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </nav>
+
+    {{-- ─── Mobile Navigation Drawer ─── --}}
+    <div id="mobileNavBackdrop" class="mobile-nav-backdrop" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); this.classList.remove('open');"></div>
+    <div id="mobileNavDrawer" class="mobile-nav-drawer">
+        <div style="padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ asset('images/icon.png') }}" alt="Interco" style="height: 28px; width: 28px; object-fit: contain;">
+                <span style="font-size: 1rem; font-weight: 800; color: var(--text);">Interco</span>
+            </div>
+            <button onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');" style="padding: 8px; border-radius: 10px; border: 1px solid var(--border); background: transparent; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        @auth
+        <div style="padding: 16px 24px; background: var(--surface-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: #7c3aed; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1rem; flex-shrink: 0;">
+                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+            </div>
+            <div style="min-width: 0;">
+                <p style="font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ auth()->user()->name }}</p>
+                <p style="font-size: 0.78rem; color: var(--muted); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ auth()->user()->email }}</p>
+            </div>
+        </div>
+        @endauth
+
+        <nav>
+            <a href="#" class="mobile-nav-link" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+                Beranda
+            </a>
+            <a href="#kategori" class="mobile-nav-link" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                Kategori
+            </a>
+            <a href="#produk" class="mobile-nav-link" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                Produk
+            </a>
+            <a href="#testimoni" class="mobile-nav-link" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                Testimoni
+            </a>
+        </nav>
+
+        @auth
+        <div style="border-top: 1px solid var(--border); margin-top: 4px;">
+            <a href="{{ route('profile.edit') }}" class="mobile-nav-link">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Profil Saya
+            </a>
+            <a href="{{ route('orders.index') }}" class="mobile-nav-link">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                Riwayat Pesanan
+            </a>
+            <a href="{{ route('custom-orders.index') }}" class="mobile-nav-link">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Pesanan Custom
+            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="mobile-nav-link" style="width: 100%; background: none; border: none; cursor: pointer; font-family: inherit; color: #ef4444;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #ef4444;"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Keluar
+                </button>
+            </form>
+        </div>
+        @else
+        <div style="padding: 20px 24px; border-top: 1px solid var(--border); margin-top: 4px;">
+            <a href="{{ route('login') }}" class="btn-primary" style="width: 100%; justify-content: center; text-decoration: none; padding: 12px 20px;">
+                Masuk
+            </a>
+        </div>
+        @endauth
+    </div>
 
     {{-- ─── Hero Section ─── --}}
     <section class="hero-section">
@@ -796,7 +1221,7 @@
         <div class="hero-orb hero-orb-3"></div>
 
         <div style="max-width: 1280px; margin: 0 auto; padding: 80px 24px; width: 100%; position: relative; z-index: 1;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;" class="md:grid-cols-2">
+            <div class="hero-grid">
                 {{-- Left content --}}
                 <div>
                     <div class="hero-badge">
@@ -830,17 +1255,17 @@
                     </div>
 
                     {{-- Mini stats --}}
-                    <div style="display: flex; gap: 32px; margin-top: 56px; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.08);">
+                    <div class="hero-stats-row">
                         <div>
                             <div style="font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1;">500+</div>
                             <div style="font-size: 0.78rem; color: #6b7280; margin-top: 4px; font-weight: 500;">Produk Custom</div>
                         </div>
-                        <div style="width: 1px; background: rgba(255,255,255,0.08);"></div>
+                        <div class="stat-divider" style="width: 1px; background: rgba(255,255,255,0.08);"></div>
                         <div>
                             <div style="font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1;">2K+</div>
                             <div style="font-size: 0.78rem; color: #6b7280; margin-top: 4px; font-weight: 500;">Pelanggan Puas</div>
                         </div>
-                        <div style="width: 1px; background: rgba(255,255,255,0.08);"></div>
+                        <div class="stat-divider" style="width: 1px; background: rgba(255,255,255,0.08);"></div>
                         <div>
                             <div style="font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1;">4.9</div>
                             <div style="font-size: 0.78rem; color: #6b7280; margin-top: 4px; font-weight: 500;">Rating Bintang</div>
@@ -849,7 +1274,7 @@
                 </div>
 
                 {{-- Right: Floating cards --}}
-                <div class="hero-visual" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px;">
+                <div class="hero-visual hero-visual-grid">
                     <div class="hero-card ticker" style="display: flex; flex-direction: column; gap: 16px;">
                         <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(124,58,237,0.2); display: flex; align-items: center; justify-content: center;">
                             <svg style="width: 22px; height: 22px; color: #a78bfa;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -910,7 +1335,7 @@
                 <h2 class="section-title" style="color: var(--text);">Pilih Jenis Pakaian</h2>
                 <p style="color: var(--muted); margin-top: 10px; font-size: 0.95rem;">Temukan kategori yang sesuai dengan kebutuhanmu</p>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;" class="reveal reveal-delay-1">
+            <div class="category-grid reveal reveal-delay-1">
                 @php
                     $categories = [
                         ['name' => 'Aksesoris', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>'],
@@ -937,7 +1362,7 @@
     {{-- ─── Produk Custom ─── --}}
     <section id="produk" class="bg-section-alt" style="padding: 80px 0;">
         <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px;">
-            <div class="reveal" style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 48px;">
+            <div class="reveal section-header-flex">
                 <div>
                     <div class="section-label">Koleksi Terpopuler</div>
                     <h2 class="section-title" style="color: var(--text);">Produk Custom Pilihan</h2>
@@ -949,7 +1374,7 @@
                 </a>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+            <div class="product-grid">
                 @forelse($products as $i => $product)
                     @php
                         $productData = \Illuminate\Support\Js::from([
@@ -966,7 +1391,7 @@
                         ]);
                     @endphp
                     <div class="product-card reveal reveal-delay-{{ min($i + 1, 4) }}"
-                        @click="cartOpen = false; selectedProduct = {{ $productData }}; productModalOpen = true">
+                        @click="cartOpen = false; selectedProduct = {{ $productData }}; modalQty = 1; productModalOpen = true;">
                         <div class="product-img-wrap">
                             @if($product->category)
                                 <div class="product-category-tag">{{ $product->category }}</div>
@@ -984,7 +1409,7 @@
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <span style="font-size: 1rem; font-weight: 800; color: var(--text);">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
                                 <button type="button"
-                                    @click.stop="cartOpen = false; selectedProduct = {{ $productData }}; productModalOpen = true"
+                                    @click.stop="cartOpen = false; selectedProduct = {{ $productData }}; modalQty = 1; productModalOpen = true;"
                                     style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(124,58,237,0.1); color: #7c3aed; border: none; cursor: pointer; transition: all 0.3s;"
                                     onmouseover="this.style.background='#7c3aed'; this.style.color='white'; this.style.transform='scale(1.1)'"
                                     onmouseout="this.style.background='rgba(124,58,237,0.1)'; this.style.color='#7c3aed'; this.style.transform='scale(1)'">
@@ -1013,7 +1438,7 @@
                 <h2 class="section-title" style="color: var(--text);">Kenapa Custom di Interco?</h2>
                 <p style="color: var(--muted); margin-top: 10px; font-size: 0.95rem; max-width: 480px; margin-left: auto; margin-right: auto;">Kami menghadirkan pengalaman custom order yang mudah, cepat, dan berkualitas tinggi</p>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+            <div class="feature-grid">
                 <div class="feature-card reveal reveal-delay-1">
                     <div class="feature-icon">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -1075,7 +1500,7 @@
                     ['name' => 'Maya Sari', 'role' => 'Freelancer', 'stars' => 4, 'desc' => 'Bahan nyaman dipakai seharian. Bordir logonya juga detail dan presisi. Sangat memuaskan hasilnya.'],
                 ];
             @endphp
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div class="review-grid">
                 @foreach($reviews as $i => $review)
                     <div class="review-card reveal reveal-delay-{{ ($i % 3) + 1 }}">
                         <div class="review-quote">"</div>
@@ -1115,7 +1540,7 @@
                 class="reveal reveal-delay-1"
                 style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 24px; padding: 36px;">
                 @csrf
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-grid-2col">
                     <div>
                         <label class="form-label">Email</label>
                         <input type="email" name="email" placeholder="kamu@email.com" class="form-input">
@@ -1173,7 +1598,7 @@
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; min-height: 500px;">
+            <div class="modal-grid">
                 {{-- Product image --}}
                 <div style="overflow: hidden; border-radius: 28px 0 0 28px;">
                     <img x-bind:src="selectedProduct?.image" x-bind:alt="selectedProduct?.name"
@@ -1194,7 +1619,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
                         <div style="padding: 16px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);">
                             <div style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Harga</div>
-                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text);" x-text="selectedProduct?.price_formatted"></div>
+                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text);" x-text="formatRp((selectedProduct?.price || 0) * modalQty)"></div>
                         </div>
                         <div style="padding: 16px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);">
                             <div style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Satuan</div>
@@ -1214,7 +1639,7 @@
                         <div style="display: flex; gap: 12px; align-items: flex-end;">
                             <div>
                                 <label style="display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px;">Qty</label>
-                                <input type="number" name="quantity" min="1" value="1"
+                                <input type="number" name="quantity" min="1" value="1" x-model.number="modalQty"
                                     style="width: 90px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 0.9rem; font-weight: 600; outline: none; transition: border-color 0.2s;"
                                     onfocus="this.style.borderColor='#7c3aed'"
                                     onblur="this.style.borderColor='var(--border)'">
@@ -1304,12 +1729,10 @@
                                         <form method="POST" action="{{ route('cart.update', $cartProduct) }}" style="display: flex; align-items: center; gap: 8px;">
                                             @csrf
                                             @method('PATCH')
-                                            <input type="number" name="quantity" min="1" value="{{ $cartItem['quantity'] }}"
-                                                style="width: 60px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.82rem; font-weight: 600; outline: none; text-align: center;">
-                                            <button type="submit"
-                                                style="padding: 6px 14px; background: #7c3aed; color: white; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: background 0.2s;"
-                                                onmouseover="this.style.background='#6d28d9'"
-                                                onmouseout="this.style.background='#7c3aed'">Update</button>
+                                    <div x-data="{ item: cartItems.find(i => i.id === {{ $cartProduct->id }}) }">
+                                        <input type="number" name="quantity" min="1" x-model.number="item.qty" @change="updateCartAjax(item.id, item.qty)"
+                                            style="width: 60px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.82rem; font-weight: 600; outline: none; text-align: center;">
+                                    </div>
                                         </form>
                                         <form method="POST" action="{{ route('cart.remove', $cartProduct) }}">
                                             @csrf
@@ -1341,7 +1764,7 @@
                 <div style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span style="font-size: 0.85rem; color: var(--muted);">Subtotal</span>
-                        <span style="font-size: 1.15rem; font-weight: 800; color: var(--text);">Rp {{ number_format($cartSubtotal, 0, ',', '.') }}</span>
+                        <span style="font-size: 1.15rem; font-weight: 800; color: var(--text);" x-text="formatRp(cartSubtotal)"></span>
                     </div>
                     <div style="font-size: 0.75rem; color: var(--muted);">Belum termasuk ongkos kirim</div>
                 </div>
@@ -1499,7 +1922,7 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="custom-order-form-grid">
                         <div>
                             <label class="form-label mb-2 block">Jumlah <span style="color: #ef4444">*</span></label>
                             <input type="number" name="quantity" min="1" value="1" required class="form-input text-lg font-bold">
@@ -1567,7 +1990,7 @@
     {{-- ─── Footer ─── --}}
     <footer class="footer">
         <div style="max-width: 1280px; margin: 0 auto; padding: 64px 24px 32px;">
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px; margin-bottom: 48px;">
+            <div class="footer-grid">
                 <div>
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
                         <div style="width: 36px; height: 36px; border-radius: 10px; background: #7c3aed; display: flex; align-items: center; justify-content: center;">
@@ -1603,7 +2026,7 @@
                     </ul>
                 </div>
             </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; display: flex; align-items: center; justify-content: space-between;">
+            <div class="footer-bottom">
                 <p style="font-size: 0.8rem; color: #374151;">&copy; {{ date('Y') }} Interco. All rights reserved.</p>
                 <p style="font-size: 0.8rem; color: #374151;">Made with ♥ in Indonesia</p>
             </div>
@@ -1665,6 +2088,8 @@
             });
         });
     </script>
+
+    @include('components.chat-widget')
 
 </body>
 </html>

@@ -429,6 +429,49 @@
         .animate-delay-1 { animation-delay: 0.1s; }
         .animate-delay-2 { animation-delay: 0.2s; }
         .animate-delay-3 { animation-delay: 0.3s; }
+
+        /* ═══════ RESPONSIVE ═══════ */
+        @media (max-width: 768px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 24px 0 60px;
+            }
+            .summary-card {
+                position: static;
+            }
+            .checkout-card {
+                padding: 20px;
+                border-radius: 16px;
+            }
+            .summary-card {
+                padding: 20px;
+                border-radius: 16px;
+            }
+            .checkout-steps .step span {
+                display: none;
+            }
+            .checkout-steps .step-line {
+                width: 24px;
+                margin: 0 6px;
+            }
+            .topbar-inner {
+                padding: 0 16px;
+            }
+            .checkout-container {
+                padding: 0 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .address-option {
+                padding: 12px;
+            }
+            .checkout-item-img {
+                width: 52px;
+                height: 52px;
+            }
+        }
     </style>
 </head>
 <body>
