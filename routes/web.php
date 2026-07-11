@@ -15,6 +15,8 @@ Route::get('/', function () {
         ->take(8)
         ->get();
 
+    $allProducts = Product::query()->where('is_active', true)->get();
+
     $cart = session('cart', []);
     $cartProducts = collect();
     $cartCount = 0;
@@ -34,7 +36,7 @@ Route::get('/', function () {
         }, 0);
     }
 
-    return view('beranda', compact('products', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal'));
+    return view('beranda', compact('products', 'allProducts', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal'));
 })->name('beranda');
 
 Route::get('/dashboard', function () {
@@ -49,6 +51,17 @@ Route::middleware('auth')->group(function () {
 
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    // Custom Orders
+    Route::prefix('custom-orders')->name('custom-orders.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\CustomOrderController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\CustomOrderController::class, 'store'])->name('store');
+        Route::get('/{customOrder}', [\App\Http\Controllers\CustomOrderController::class, 'show'])->name('show');
+        Route::post('/{customOrder}/revisions', [\App\Http\Controllers\CustomOrderController::class, 'storeRevision'])->name('revisions.store');
+        Route::post('/{customOrder}/approve', [\App\Http\Controllers\CustomOrderController::class, 'approve'])->name('approve');
+        Route::get('/{customOrder}/checkout', [\App\Http\Controllers\CustomOrderController::class, 'checkout'])->name('checkout');
+        Route::post('/{customOrder}/checkout', [\App\Http\Controllers\CustomOrderController::class, 'processCheckout'])->name('process-checkout');
+    });
+
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
     // Orders (Riwayat Pesanan)

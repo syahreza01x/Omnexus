@@ -37,4 +37,9 @@ class Product extends Model
     {
         return $this->hasMany(TransactionItem::class);
     }
+
+    public function customOrders(): HasMany
+    {
+        return $this->hasMany(CustomOrder::class);
+    }
 }

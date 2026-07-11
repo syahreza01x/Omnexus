@@ -29,6 +29,12 @@ Route::middleware(['auth', 'check.admin:admin_web,super_admin'])->group(function
     Route::get('/admin/web/chat', [AdminChatController::class, 'index'])->name('admin.web.chat.index');
     Route::get('/admin/web/chat/{user}', [AdminChatController::class, 'show'])->name('admin.web.chat.show');
     Route::post('/admin/web/chat/{user}', [AdminChatController::class, 'store'])->name('admin.web.chat.store');
+
+    // Custom Orders Management
+    Route::get('/admin/web/custom-orders', [\App\Http\Controllers\Admin\AdminCustomOrderController::class, 'index'])->name('admin.web.custom-orders.index');
+    Route::get('/admin/web/custom-orders/{customOrder}', [\App\Http\Controllers\Admin\AdminCustomOrderController::class, 'show'])->name('admin.web.custom-orders.show');
+    Route::patch('/admin/web/custom-orders/{customOrder}/status', [\App\Http\Controllers\Admin\AdminCustomOrderController::class, 'updateStatus'])->name('admin.web.custom-orders.update-status');
+    Route::post('/admin/web/custom-orders/{customOrder}/revisions', [\App\Http\Controllers\Admin\AdminCustomOrderController::class, 'storeRevision'])->name('admin.web.custom-orders.revisions.store');
 });
 
 Route::middleware(['auth', 'check.admin:admin_warehouse,super_admin'])->group(function () {
