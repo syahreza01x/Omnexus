@@ -296,6 +296,34 @@
         .animate-delay-1 { animation-delay: 0.1s; }
         .animate-delay-2 { animation-delay: 0.2s; }
         .animate-delay-3 { animation-delay: 0.3s; }
+
+        /* ═══════ RESPONSIVE ═══════ */
+        @media (max-width: 768px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .detail-card {
+                padding: 20px;
+                border-radius: 16px;
+            }
+            .detail-card[style*="sticky"] {
+                position: static !important;
+            }
+            .page-container {
+                padding: 24px 16px 60px;
+            }
+            .topbar-inner {
+                padding: 0 16px;
+            }
+            .detail-item-img {
+                width: 56px;
+                height: 56px;
+            }
+            .total-value {
+                font-size: 1.1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -343,7 +371,7 @@
         </div>
 
         {{-- Page Title --}}
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px;" class="animate-in">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px;" class="animate-in">
             <div>
                 <h1 style="font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--text); margin: 0 0 6px;">
                     Pesanan #{{ str_pad($transaction->id, 5, '0', STR_PAD_LEFT) }}
