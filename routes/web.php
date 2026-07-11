@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ChatController;
 use App\Models\Product;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -11,6 +14,8 @@ Route::get('/', function () {
         ->latest()
         ->take(8)
         ->get();
+
+    $allProducts = Product::query()->where('is_active', true)->get();
 
     $cart = session('cart', []);
     $cartProducts = collect();
@@ -31,17 +36,43 @@ Route::get('/', function () {
         }, 0);
     }
 
-    return view('beranda', compact('products', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal'));
+    return view('beranda', compact('products', 'allProducts', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal'));
 })->name('beranda');
 
 Route::get('/dashboard', function () {
     return redirect()->route('beranda');
 })->middleware(['auth'])->name('dashboard');
 
-Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
-Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove');
-Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+Route::middleware('auth')->group(function () {
+    Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
+    Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+
+    // Checkout
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    // Custom Orders
+    Route::prefix('custom-orders')->name('custom-orders.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\CustomOrderController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\CustomOrderController::class, 'store'])->name('store');
+        Route::get('/{customOrder}', [\App\Http\Controllers\CustomOrderController::class, 'show'])->name('show');
+        Route::post('/{customOrder}/revisions', [\App\Http\Controllers\CustomOrderController::class, 'storeRevision'])->name('revisions.store');
+        Route::post('/{customOrder}/approve', [\App\Http\Controllers\CustomOrderController::class, 'approve'])->name('approve');
+        Route::get('/{customOrder}/checkout', [\App\Http\Controllers\CustomOrderController::class, 'checkout'])->name('checkout');
+        Route::post('/{customOrder}/checkout', [\App\Http\Controllers\CustomOrderController::class, 'processCheckout'])->name('process-checkout');
+    });
+
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+    // Orders (Riwayat Pesanan)
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{transaction}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{transaction}/proof', [OrderController::class, 'uploadProof'])->name('orders.upload-proof');
+
+    // Chat
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -60,3 +91,4 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
+
