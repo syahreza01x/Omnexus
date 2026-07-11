@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CustomOrder;
+use App\Models\CustomOrderRevision;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +17,7 @@ class AdminCustomOrderController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = CustomOrder::with('user');
+        $query = CustomOrder::with(['user', 'product_relation']);
 
         // Apply Status Filter
         if ($request->status) {
@@ -38,6 +39,7 @@ class AdminCustomOrderController extends Controller
         }
 
         $customOrders = $query->latest()->paginate(20);
+        $orders = $customOrders; // alias for compatibility
         
         $statuses = [
             'menunggu_review' => 'Menunggu Review',
@@ -49,7 +51,7 @@ class AdminCustomOrderController extends Controller
             'selesai' => 'Selesai',
         ];
 
-        return view('admin.web.custom-orders.index', compact('customOrders', 'statuses'));
+        return view('admin.web.custom-orders.index', compact('customOrders', 'orders', 'statuses'));
     }
 
     /**
@@ -57,6 +59,10 @@ class AdminCustomOrderController extends Controller
      */
     public function show(CustomOrder $customOrder): View
     {
+        $customOrder->load(['user', 'product_relation', 'revisions' => function ($query) {
+            $query->oldest();
+        }]);
+
         $statuses = [
             'menunggu_review' => 'Menunggu Review',
             'menunggu_persetujuan_customer' => 'Menunggu Persetujuan Customer',
@@ -71,7 +77,7 @@ class AdminCustomOrderController extends Controller
     }
 
     /**
-     * Update status of the custom order.
+     * Update status and upload mockup file (Ardiman's flow).
      */
     public function update(Request $request, CustomOrder $customOrder): RedirectResponse
     {
@@ -104,14 +110,71 @@ class AdminCustomOrderController extends Controller
      */
     public function downloadDesign(CustomOrder $customOrder)
     {
-        if (!$customOrder->design_file || !Storage::disk('public')->exists($customOrder->design_file)) {
+        // Check either column
+        $filePath = $customOrder->design_file ?: $customOrder->user_design_path;
+
+        if (!$filePath || !Storage::disk('public')->exists($filePath)) {
             abort(404, 'File desain tidak ditemukan di storage.');
         }
 
         // Generate default download filename preserving original extension
-        $extension = pathinfo($customOrder->design_file, PATHINFO_EXTENSION);
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION);
         $filename = 'desain-order-' . str_pad($customOrder->id, 5, '0', STR_PAD_LEFT) . '.' . $extension;
 
-        return Storage::disk('public')->download($customOrder->design_file, $filename);
+        return Storage::disk('public')->download($filePath, $filename);
+    }
+
+    /**
+     * Update status and set price (Reza's flow).
+     */
+    public function updateStatus(Request $request, CustomOrder $customOrder)
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:pending,designing,revision,approved,rejected,completed',
+            'price_per_item' => 'nullable|numeric|min:0',
+        ]);
+
+        $customOrder->status = $validated['status'];
+        
+        if (isset($validated['price_per_item'])) {
+            $customOrder->price_per_item = $validated['price_per_item'];
+        }
+
+        $customOrder->save();
+
+        return back()->with('success', 'Status pesanan custom berhasil diperbarui.');
+    }
+
+    /**
+     * Store admin revision message and upload mockup (Reza's flow).
+     */
+    public function storeRevision(Request $request, CustomOrder $customOrder)
+    {
+        $validated = $request->validate([
+            'message' => 'required_without:attachment_file|string|nullable',
+            'attachment_file' => 'nullable|image|max:5120',
+            'is_final_design' => 'nullable|boolean',
+        ]);
+
+        $attachmentPath = null;
+        if ($request->hasFile('attachment_file')) {
+            $attachmentPath = $request->file('attachment_file')->store('custom_designs/revisions', 'public');
+            
+            // If admin checks "This is final design"
+            if ($request->boolean('is_final_design')) {
+                $customOrder->update([
+                    'admin_design_path' => $attachmentPath,
+                    'admin_mockup_file' => $attachmentPath // sync
+                ]);
+            }
+        }
+
+        $customOrder->revisions()->create([
+            'sender_type' => 'admin',
+            'message' => $validated['message'],
+            'attachment_path' => $attachmentPath,
+        ]);
+
+        return back()->with('success', 'Pesan balasan berhasil dikirim.');
     }
 }

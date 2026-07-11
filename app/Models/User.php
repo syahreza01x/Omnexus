@@ -118,4 +118,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Message::class);
     }
+
+    public function customOrders(): HasMany
+    {
+        return $this->hasMany(CustomOrder::class);
+    }
 }

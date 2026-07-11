@@ -30,7 +30,7 @@
                     Cari & Filter
                 </button>
                 @if (request('search') || request('status'))
-                    <a href="{{ route('admin.web.custom-orders.index') }}" class="w-full md:w-auto px-5 py-2.5 border border-gray-250 dark:border-gray-700 text-gray-700 dark:text-gray-350 font-semibold rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-750 transition duration-150">
+                    <a href="{{ route('admin.web.custom-orders.index') }}" class="w-full md:w-auto px-5 py-2.5 border border-gray-250 dark:border-gray-700 text-gray-700 dark:text-gray-355 font-semibold rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-750 transition duration-150">
                         Reset
                     </a>
                 @endif
@@ -57,22 +57,30 @@
                 @forelse ($customOrders as $order)
                     <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-750/30 transition duration-150">
                         <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
-                            #ORD-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
+                            @if($order->product_id)
+                                #CUST-{{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }}
+                            @else
+                                #ORD-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
+                            @endif
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm font-semibold text-gray-800 dark:text-gray-200">
                                 {{ $order->user->name }}
                             </div>
                             <div class="text-xs text-gray-400 dark:text-gray-500">
-                                {{ $order->whatsapp_number }}
+                                {{ $order->whatsapp_number ?? $order->user->email }}
                             </div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm font-medium">
-                                @if($order->product === 'lainnya')
-                                    {{ $order->other_product_name }}
+                                @if($order->product_id)
+                                    {{ $order->product_relation->name ?? 'Custom Product' }}
                                 @else
-                                    {{ $order->product }}
+                                    @if($order->product === 'lainnya')
+                                        {{ $order->other_product_name }}
+                                    @else
+                                        {{ $order->product }}
+                                    @endif
                                 @endif
                             </div>
                             <div class="text-xs text-gray-400 dark:text-gray-500 capitalize">
@@ -83,7 +91,7 @@
                             {{ $order->quantity }} Pcs
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                            {{ $order->deadline->format('d M Y') }}
+                            {{ $order->deadline ? $order->deadline->format('d M Y') : '-' }}
                         </td>
                         <td class="px-6 py-4">
                             <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold {{ $order->status_badge_classes }}">
@@ -91,7 +99,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4">
-                            @if ($order->design_file)
+                            @if ($order->design_file || $order->user_design_path)
                                 <a href="{{ route('admin.web.custom-orders.download', $order) }}" class="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-semibold" title="Unduh Desain">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>

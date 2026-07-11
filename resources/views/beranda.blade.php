@@ -1,7 +1,15 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', productModalOpen: false, cartOpen: false, mobileMenuOpen: false, selectedProduct: null, navScrolled: false, searchQuery: '' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); window.addEventListener('scroll', () => { let sc = window.scrollY > 20; if(navScrolled !== sc) navScrolled = sc; }, { passive: true })" :class="{ 'dark': darkMode }" class="overflow-x-hidden" style="scroll-behavior: smooth;">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', productModalOpen: false, cartOpen: false, mobileMenuOpen: false, selectedProduct: null, navScrolled: false, searchQuery: '', customOrderOpen: false, modalQty: 1 }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); window.addEventListener('scroll', () => { let sc = window.scrollY > 20; if(navScrolled !== sc) navScrolled = sc; }, { passive: true })" :class="{ 'dark': darkMode }" class="overflow-x-hidden" style="scroll-behavior: smooth;">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        window.initialCartItems = {!! \Illuminate\Support\Js::from(collect($cart ?? [])->map(function($i) use ($cartProducts) {
+            $p = isset($i['product_id']) ? $cartProducts->get((int)$i['product_id']) : null;
+            return $p ? ['id' => $p->id, 'qty' => (int)$i['quantity'], 'price' => (float)$p->price] : null;
+        })->filter()->values()) !!};
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Interco — Wujudkan Pakaian Impianmu</title>
     <meta name="description" content="Custom order pakaian premium. Desain bebas, bahan berkualitas, pengerjaan cepat.">
@@ -681,6 +689,320 @@
             border-color: var(--border);
             color: var(--text);
         }
+
+        /* ─── Mobile Hamburger Button ─── */
+        .mobile-menu-btn {
+            display: none;
+            padding: 8px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s;
+        }
+        .mobile-menu-btn:hover {
+            background: rgba(124,58,237,0.08);
+        }
+
+        /* ─── Mobile Nav Drawer ─── */
+        .mobile-nav-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 150;
+        }
+        .mobile-nav-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(320px, 85vw);
+            background: var(--surface);
+            z-index: 151;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+        }
+        .dark .mobile-nav-drawer {
+            background: #0f0f13;
+        }
+        .mobile-nav-drawer.open {
+            transform: translateX(0);
+        }
+        .mobile-nav-backdrop.open {
+            display: block;
+        }
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            text-decoration: none;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border);
+        }
+        .mobile-nav-link:hover {
+            background: rgba(124,58,237,0.06);
+        }
+        .mobile-nav-link svg {
+            width: 20px;
+            height: 20px;
+            color: var(--muted);
+        }
+
+        /* ─── Responsive: Hero grid ─── */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+        }
+        .hero-visual-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 20px;
+        }
+        .hero-stats-row {
+            display: flex;
+            gap: 32px;
+            margin-top: 56px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        /* ─── Responsive: Category grid ─── */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+        /* ─── Responsive: Product grid ─── */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        /* ─── Responsive: Feature grid ─── */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        /* ─── Responsive: Review grid ─── */
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        /* ─── Responsive: Footer grid ─── */
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        /* ─── Responsive: Modal grid ─── */
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 500px;
+        }
+        /* ─── Responsive: Form grid ─── */
+        .form-grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        /* ─── Responsive: Custom order grid ─── */
+        .custom-order-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        /* ─── Responsive: Product section header ─── */
+        .section-header-flex {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 48px;
+        }
+
+        /* ═══════ MEDIA QUERIES ═══════ */
+
+        /* Tablet & below (max 1024px) */
+        @media (max-width: 1024px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .hero-visual-grid {
+                max-width: 480px;
+                margin: 0 auto;
+            }
+            .category-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Mobile & below (max 768px) */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .nav-desktop-only {
+                display: none !important;
+            }
+
+            .hero-grid {
+                gap: 32px;
+            }
+            .hero-title {
+                font-size: clamp(2rem, 8vw, 2.8rem) !important;
+            }
+            .hero-desc {
+                font-size: 0.95rem;
+            }
+            .hero-stats-row {
+                gap: 20px;
+                margin-top: 36px;
+                padding-top: 24px;
+                flex-wrap: wrap;
+            }
+            .hero-stats-row > div:not(:empty) > div:first-child {
+                font-size: 1.4rem !important;
+            }
+            .hero-visual-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                padding: 12px;
+            }
+            .category-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .feature-card {
+                padding: 24px;
+            }
+            .review-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .review-card {
+                padding: 20px;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .footer-bottom {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            .modal-grid {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+            .modal-grid > div:first-child {
+                max-height: 240px;
+                border-radius: 28px 28px 0 0 !important;
+            }
+            .modal-content {
+                border-radius: 24px;
+                max-height: 90vh;
+            }
+            .modal-grid > div:last-child {
+                padding: 24px 20px !important;
+                max-height: none !important;
+            }
+            .form-grid-2col {
+                grid-template-columns: 1fr;
+            }
+            .custom-order-form-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .section-header-flex {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .btn-primary {
+                padding: 12px 22px;
+                font-size: 0.85rem;
+            }
+            .btn-ghost {
+                padding: 12px 22px;
+                font-size: 0.85rem;
+            }
+            .section-title {
+                font-size: clamp(1.4rem, 5vw, 1.8rem);
+            }
+        }
+
+        /* Small mobile (max 480px) */
+        @media (max-width: 480px) {
+            .hero-visual-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 8px;
+            }
+            .hero-visual-grid .hero-card:nth-child(2) {
+                margin-top: 0 !important;
+            }
+            .hero-visual-grid .hero-card:last-child {
+                grid-column: span 1 !important;
+            }
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .product-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .hero-stats-row {
+                gap: 16px;
+            }
+            .hero-stats-row .stat-divider {
+                display: none;
+            }
+            .nav-inner {
+                padding: 0 16px;
+            }
+            .cart-item {
+                padding: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -742,7 +1064,7 @@
                 @endauth
 
                 @auth
-                    <div x-data="{ open: false }" class="relative">
+                    <div x-data="{ open: false }" class="relative hidden md:block nav-desktop-only">
                         <button @click="open = !open"
                             class="flex items-center justify-center p-2 md:p-2.5 rounded-xl transition-all duration-200"
                             style="color: rgba(255,255,255,0.7);"
@@ -771,24 +1093,6 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
                                 Chat Support
                             </a>
-                            <a href="{{ route('orders.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm transition-colors" style="color: var(--muted);" onmouseover="this.style.background='rgba(124,58,237,0.08)'" onmouseout="this.style.background='transparent'">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-                                Riwayat Pesanan
-                            </a>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors" style="color: var(--muted);" onmouseover="this.style.background='rgba(239,68,68,0.08)'; this.style.color='#ef4444'" onmouseout="this.style.background='transparent'; this.style.color='var(--muted)'">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                    Keluar
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                @else
-                    <a href="{{ route('login') }}" class="btn-primary" style="padding: 10px 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-                        </svg>
                         Masuk
                     </a>
                 @endauth
@@ -816,6 +1120,81 @@
             </div>
         </div>
     </nav>
+
+    {{-- ─── Mobile Navigation Drawer ─── --}}
+    <div id="mobileNavBackdrop" class="mobile-nav-backdrop" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); this.classList.remove('open');"></div>
+    <div id="mobileNavDrawer" class="mobile-nav-drawer">
+        <div style="padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="{{ asset('images/icon.png') }}" alt="Interco" style="height: 28px; width: 28px; object-fit: contain;">
+                <span style="font-size: 1rem; font-weight: 800; color: var(--text);">Interco</span>
+            </div>
+            <button onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');" style="padding: 8px; border-radius: 10px; border: 1px solid var(--border); background: transparent; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center;">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        @auth
+        <div style="padding: 16px 24px; background: var(--surface-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: #7c3aed; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1rem; flex-shrink: 0;">
+                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+            </div>
+            <div style="min-width: 0;">
+                <p style="font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ auth()->user()->name }}</p>
+                <p style="font-size: 0.78rem; color: var(--muted); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ auth()->user()->email }}</p>
+            </div>
+        </div>
+        @endauth
+
+        <nav>
+            <a href="#" class="mobile-nav-link" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>
+                Beranda
+            </a>
+            <a href="#kategori" class="mobile-nav-link" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                Kategori
+            </a>
+            <a href="#produk" class="mobile-nav-link" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                Produk
+            </a>
+            <a href="#testimoni" class="mobile-nav-link" onclick="document.getElementById('mobileNavDrawer').classList.remove('open'); document.getElementById('mobileNavBackdrop').classList.remove('open');">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                Testimoni
+            </a>
+        </nav>
+
+        @auth
+        <div style="border-top: 1px solid var(--border); margin-top: 4px;">
+            <a href="{{ route('profile.edit') }}" class="mobile-nav-link">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Profil Saya
+            </a>
+            <a href="{{ route('orders.index') }}" class="mobile-nav-link">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                Riwayat Pesanan
+            </a>
+            <a href="{{ route('custom-orders.index') }}" class="mobile-nav-link">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Pesanan Custom
+            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="mobile-nav-link" style="width: 100%; background: none; border: none; cursor: pointer; font-family: inherit; color: #ef4444;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #ef4444;"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Keluar
+                </button>
+            </form>
+        </div>
+        @else
+        <div style="padding: 20px 24px; border-top: 1px solid var(--border); margin-top: 4px;">
+            <a href="{{ route('login') }}" class="btn-primary" style="width: 100%; justify-content: center; text-decoration: none; padding: 12px 20px;">
+                Masuk
+            </a>
+        </div>
+        @endauth
+    </div>
 
     {{-- ─── Hero Section ─── --}}
     <section class="hero-section">
@@ -850,7 +1229,7 @@
                             </svg>
                             Lihat Katalog
                         </a>
-                        <a href="{{ route('custom-orders.index') }}" class="btn-ghost">
+                        <a href="#" @click.prevent="customOrderOpen = true" class="btn-ghost">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/>
                             </svg>
@@ -864,12 +1243,12 @@
                             <div style="font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1;">500+</div>
                             <div style="font-size: 0.78rem; color: #6b7280; margin-top: 4px; font-weight: 500;">Produk Custom</div>
                         </div>
-                        <div style="width: 1px; background: rgba(255,255,255,0.08);"></div>
+                        <div class="stat-divider" style="width: 1px; background: rgba(255,255,255,0.08);"></div>
                         <div>
                             <div style="font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1;">2K+</div>
                             <div style="font-size: 0.78rem; color: #6b7280; margin-top: 4px; font-weight: 500;">Pelanggan Puas</div>
                         </div>
-                        <div style="width: 1px; background: rgba(255,255,255,0.08);"></div>
+                        <div class="stat-divider" style="width: 1px; background: rgba(255,255,255,0.08);"></div>
                         <div>
                             <div style="font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1;">4.9</div>
                             <div style="font-size: 0.78rem; color: #6b7280; margin-top: 4px; font-weight: 500;">Rating Bintang</div>
@@ -995,9 +1374,8 @@
                         ]);
                     @endphp
                     <div class="product-card reveal reveal-delay-{{ min($i + 1, 4) }}"
-                        x-show="searchQuery === '' || '{{ strtolower($product->name) }}'.includes(searchQuery.toLowerCase())"
-                        @click="cartOpen = false; selectedProduct = {{ $productData }}; productModalOpen = true">
-                        <div class="product-img-wrap" x-data="{ loaded: false }">
+                        @click="cartOpen = false; selectedProduct = {{ $productData }}; modalQty = 1; productModalOpen = true;">
+                        <div class="product-img-wrap">
                             @if($product->category)
                                 <div class="product-category-tag z-10">{{ $product->category }}</div>
                             @endif
@@ -1018,9 +1396,9 @@
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <span style="font-size: 1rem; font-weight: 800; color: var(--text);">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
                                 <button type="button"
-                                    @click.stop="cartOpen = false; selectedProduct = {{ $productData }}; productModalOpen = true"
-                                    style="padding: 0 14px; height: 36px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; background: rgba(124,58,237,0.1); color: #7c3aed; border: none; cursor: pointer; transition: all 0.3s; font-size: 0.8rem; font-weight: 700; white-space: nowrap;"
-                                    onmouseover="this.style.background='#7c3aed'; this.style.color='white'; this.style.transform='scale(1.05)'"
+                                    @click.stop="cartOpen = false; selectedProduct = {{ $productData }}; modalQty = 1; productModalOpen = true;"
+                                    style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(124,58,237,0.1); color: #7c3aed; border: none; cursor: pointer; transition: all 0.3s;"
+                                    onmouseover="this.style.background='#7c3aed'; this.style.color='white'; this.style.transform='scale(1.1)'"
                                     onmouseout="this.style.background='rgba(124,58,237,0.1)'; this.style.color='#7c3aed'; this.style.transform='scale(1)'">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>
@@ -1400,7 +1778,7 @@
                 <div style="background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span style="font-size: 0.85rem; color: var(--muted);">Subtotal</span>
-                        <span style="font-size: 1.15rem; font-weight: 800; color: var(--text);">Rp {{ number_format($cartSubtotal, 0, ',', '.') }}</span>
+                        <span style="font-size: 1.15rem; font-weight: 800; color: var(--text);" x-text="formatRp(cartSubtotal)"></span>
                     </div>
                     <div style="font-size: 0.75rem; color: var(--muted);">Belum termasuk ongkos kirim</div>
                 </div>
@@ -1430,10 +1808,204 @@
         </div>
     </div>
 
+    {{-- ─── Custom Order Modal ─── --}}
+    <div x-cloak x-show="customOrderOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+        <div class="absolute inset-0" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);" @click="customOrderOpen = false"></div>
+
+        <div class="relative w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl" style="background: var(--surface); border: 1px solid var(--border); max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text);">Pesan Custom Order</h3>
+                <button type="button" @click="customOrderOpen = false" style="color: var(--muted); hover:text-white;">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div style="padding: 24px; overflow-y: auto;">
+                @auth
+                <form method="POST" action="{{ route('custom-orders.store') }}" enctype="multipart/form-data" x-data="{ 
+                    selectedProductName: '',
+                    selectedCategory: '',
+                    selectedMaterial: '',
+                    get dynamicCategories() {
+                        if (!this.selectedProductName) return [];
+                        const name = this.selectedProductName.toLowerCase();
+                        if (name.includes('kaos') || name.includes('t-shirt') || name.includes('baju')) {
+                            return [
+                                {name: 'Lengan Pendek', img: '{{ asset('images/items/3.png') }}'},
+                                {name: 'Lengan Panjang', img: '{{ asset('images/items/4.png') }}'},
+                                {name: 'Oversize', img: '{{ asset('images/items/5.png') }}'},
+                                {name: 'V-Neck', img: '{{ asset('images/items/6.png') }}'}
+                            ];
+                        }
+                        if (name.includes('hoodie') || name.includes('jaket') || name.includes('sweater') || name.includes('outer')) {
+                            return [
+                                {name: 'Pullover (Tanpa Resleting)', img: '{{ asset('images/items/1.png') }}'},
+                                {name: 'Zipper (Resleting)', img: '{{ asset('images/items/2.png') }}'},
+                                {name: 'Crop', img: '{{ asset('images/items/3.png') }}'}
+                            ];
+                        }
+                        if (name.includes('totebag') || name.includes('tas')) {
+                            return [
+                                {name: 'Pakai Resleting', img: '{{ asset('images/items/1.png') }}'},
+                                {name: 'Pakai Perekat (Velcro)', img: '{{ asset('images/items/2.png') }}'},
+                                {name: 'Tanpa Penutup', img: '{{ asset('images/items/3.png') }}'}
+                            ];
+                        }
+                        if (name.includes('pin') || name.includes('gantungan')) {
+                            return [
+                                {name: 'Glossy', img: '{{ asset('images/items/1.png') }}'},
+                                {name: 'Doff / Matte', img: '{{ asset('images/items/2.png') }}'},
+                                {name: 'Hologram', img: '{{ asset('images/items/3.png') }}'}
+                            ];
+                        }
+                        return [
+                            {name: 'Standar', img: '{{ asset('images/items/1.png') }}'},
+                            {name: 'Premium', img: '{{ asset('images/items/2.png') }}'}
+                        ];
+                    },
+                    get dynamicMaterials() {
+                        if (!this.selectedProductName) return [];
+                        const name = this.selectedProductName.toLowerCase();
+                        if (name.includes('kaos') || name.includes('t-shirt') || name.includes('baju')) {
+                            return ['Cotton Combed 30s', 'Cotton Combed 24s', 'Cotton Bamboo', 'Polyester'];
+                        }
+                        if (name.includes('hoodie') || name.includes('jaket') || name.includes('sweater') || name.includes('outer')) {
+                            return ['Fleece', 'Baby Terry', 'Cotton Dorr'];
+                        }
+                        if (name.includes('totebag') || name.includes('tas')) {
+                            return ['Kanvas', 'Blacu', 'Drill'];
+                        }
+                        if (name.includes('pin') || name.includes('gantungan')) {
+                            return ['Plastik PVC', 'Akrilik', 'Logam/Kaleng'];
+                        }
+                        return ['Bahan Standar', 'Bahan Premium'];
+                    }
+                }">
+                    @csrf
+                    
+                    <div style="margin-bottom: 24px;">
+                        <label class="form-label mb-3 block">Basis Pakaian (Benda Kosongan) <span style="color: #ef4444">*</span></label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            @foreach($allProducts as $p)
+                                <label class="cursor-pointer" @click="selectedProductName = '{{ addslashes($p->name) }}'; selectedCategory = ''; selectedMaterial = '';">
+                                    <input type="radio" name="product_id" value="{{ $p->id }}" class="peer sr-only" required>
+                                    <div class="rounded-xl border border-gray-200 dark:border-zinc-700 peer-checked:border-violet-500 peer-checked:ring-2 peer-checked:ring-violet-500 overflow-hidden transition-all hover:border-violet-300 bg-white dark:bg-zinc-800 h-full flex flex-col">
+                                        <img src="{{ asset($p->image_path ?: 'images/items/1.png') }}" class="w-full h-24 object-cover">
+                                        <div class="p-3 bg-white dark:bg-zinc-800">
+                                            <h4 class="font-bold text-xs text-gray-900 dark:text-white line-clamp-2 leading-tight">{{ $p->name }}</h4>
+                                            <p class="text-[10px] text-gray-500 mt-1 font-medium">Stok: {{ $p->stock }}</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 24px;" x-show="selectedProductName" x-transition style="display: none;">
+                        <label class="form-label mb-3 block">Kategori / Varian Tambahan (Opsional)</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <template x-for="(cat, index) in dynamicCategories" :key="index">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="category" :value="cat.name" x-model="selectedCategory" class="peer sr-only">
+                                    <div class="rounded-xl border border-gray-200 dark:border-zinc-700 peer-checked:border-violet-500 peer-checked:bg-violet-50 dark:peer-checked:bg-violet-900/20 overflow-hidden transition-all hover:border-violet-300 bg-white dark:bg-zinc-800 flex items-center gap-3 p-2">
+                                        <img :src="cat.img" onerror="this.src='{{ asset('images/items/1.png') }}'" class="w-10 h-10 rounded-lg object-cover bg-gray-100">
+                                        <span class="font-semibold text-xs text-gray-800 dark:text-gray-200" x-text="cat.name"></span>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 24px;" x-show="selectedProductName" x-transition style="display: none;">
+                        <label class="form-label mb-3 block">Pilih Bahan (Opsional)</label>
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="(mat, index) in dynamicMaterials" :key="index">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="material" :value="mat" x-model="selectedMaterial" class="peer sr-only">
+                                    <div class="px-4 py-2 rounded-full border border-gray-200 dark:border-zinc-700 peer-checked:border-violet-500 peer-checked:bg-violet-600 peer-checked:text-white text-xs font-bold text-gray-600 dark:text-gray-300 transition-all hover:border-violet-400" x-text="mat">
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="custom-order-form-grid">
+                        <div>
+                            <label class="form-label mb-2 block">Jumlah <span style="color: #ef4444">*</span></label>
+                            <input type="number" name="quantity" min="1" value="1" required class="form-input text-lg font-bold">
+                        </div>
+                        <div x-data="{ fileName: '', preview: null }">
+                            <label class="form-label mb-2 block">Upload Desain / Logo (Max 5MB)</label>
+                            <div class="relative flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl transition-colors hover:bg-gray-50 dark:hover:bg-zinc-800/50" :class="preview ? 'border-violet-500 bg-violet-50/50 dark:bg-violet-900/10' : 'border-gray-300 dark:border-zinc-700'">
+                                <div class="w-full h-full cursor-pointer flex flex-col items-center justify-center pt-3 pb-3" x-show="!preview" @click="$refs.fileInput.click()">
+                                    <svg class="w-6 h-6 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400"><span class="font-semibold text-violet-600">Klik</span> atau Drop gambar</p>
+                                </div>
+                                <div class="w-full h-full flex items-center gap-3 p-3" x-show="preview" style="display: none;">
+                                    <img :src="preview" class="h-full rounded-lg object-contain w-16 bg-white cursor-pointer" @click="$refs.fileInput.click()">
+                                    <div class="flex-1 min-w-0 cursor-pointer" @click="$refs.fileInput.click()">
+                                        <p class="text-xs font-bold text-gray-900 dark:text-white truncate" x-text="fileName"></p>
+                                        <p class="text-[10px] text-green-600 font-medium">Siap diupload (Klik untuk ganti)</p>
+                                    </div>
+                                    <button type="button" @click.stop="preview = null; fileName = ''; $refs.fileInput.value = ''" class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg relative z-10">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                                <input type="file" name="design_file" accept="image/*" class="sr-only" x-ref="fileInput" 
+                                    @change="
+                                        const file = $event.target.files[0];
+                                        if(file) {
+                                            fileName = file.name;
+                                            const reader = new FileReader();
+                                            reader.onload = (e) => preview = e.target.result;
+                                            reader.readAsDataURL(file);
+                                        } else {
+                                            preview = null;
+                                            fileName = '';
+                                        }
+                                    ">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 24px;">
+                        <label class="form-label mb-2 block">Catatan Tambahan (Opsional)</label>
+                        <textarea name="notes" rows="3" placeholder="Sertakan detail ukuran, posisi logo, warna sablon, dll..." class="form-input"></textarea>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end;">
+                        <button type="submit" class="btn-primary" style="background: #7c3aed; padding: 12px 24px; font-size: 0.95rem;">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                            Kirim Permintaan Custom
+                        </button>
+                    </div>
+                </form>
+                @else
+                <div style="text-align: center; padding: 40px 0;">
+                    <svg style="width: 48px; height: 48px; margin: 0 auto 16px; color: #7c3aed;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                    </svg>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 8px;">Anda Belum Masuk</h3>
+                    <p style="color: var(--muted); margin-bottom: 24px;">Silakan login terlebih dahulu untuk melakukan pemesanan custom order.</p>
+                    <a href="{{ route('login') }}" class="btn-primary" style="display: inline-flex;">Masuk Sekarang</a>
+                </div>
+                @endauth
+            </div>
+        </div>
+    </div>
+
     {{-- ─── Footer ─── --}}
     <footer class="footer">
         <div style="max-width: 1280px; margin: 0 auto; padding: 64px 24px 32px;">
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px; margin-bottom: 48px;">
+            <div class="footer-grid">
                 <div>
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
                         <div style="width: 36px; height: 36px; border-radius: 10px; background: #7c3aed; display: flex; align-items: center; justify-content: center;">
@@ -1469,7 +2041,7 @@
                     </ul>
                 </div>
             </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; display: flex; align-items: center; justify-content: space-between;">
+            <div class="footer-bottom">
                 <p style="font-size: 0.8rem; color: #374151;">&copy; {{ date('Y') }} Interco. All rights reserved.</p>
                 <p style="font-size: 0.8rem; color: #374151;">Made with ♥ in Indonesia</p>
             </div>
@@ -1895,5 +2467,6 @@
             }
         }
     </script>
+    @include('components.chat-widget')
 </body>
 </html>

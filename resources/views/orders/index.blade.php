@@ -316,6 +316,31 @@
             animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
+        /* ═══════ RESPONSIVE ═══════ */
+        @media (max-width: 768px) {
+            .page-container {
+                padding: 24px 16px 60px;
+            }
+            .topbar-inner {
+                padding: 0 16px;
+            }
+            .order-card {
+                padding: 18px;
+                border-radius: 16px;
+            }
+            .order-header {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .order-footer {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .page-title {
+                font-size: 1.4rem;
+            }
+        }
+
         @php
             function getStatusLabel($status) {
                 return match($status) {

@@ -31,8 +31,10 @@ Route::middleware(['auth', 'check.admin:admin_web,super_admin'])->group(function
     Route::patch('/admin/web/faqs/{faq}', [\App\Http\Controllers\FaqController::class, 'update'])->name('admin.web.faqs.update');
     Route::delete('/admin/web/faqs/{faq}', [\App\Http\Controllers\FaqController::class, 'destroy'])->name('admin.web.faqs.destroy');
 
-    // Admin Custom Orders
+    // Admin Custom Orders (merged)
     Route::get('/admin/web/custom-orders/{custom_order}/download', [\App\Http\Controllers\Admin\AdminCustomOrderController::class, 'downloadDesign'])->name('admin.web.custom-orders.download');
+    Route::post('/admin/web/custom-orders/{customOrder}/revisions', [\App\Http\Controllers\Admin\AdminCustomOrderController::class, 'storeRevision'])->name('admin.web.custom-orders.revisions.store');
+    Route::patch('/admin/web/custom-orders/{customOrder}/status', [\App\Http\Controllers\Admin\AdminCustomOrderController::class, 'updateStatus'])->name('admin.web.custom-orders.update-status');
     Route::resource('/admin/web/custom-orders', \App\Http\Controllers\Admin\AdminCustomOrderController::class)
         ->names('admin.web.custom-orders')
         ->only(['index', 'show', 'update']);

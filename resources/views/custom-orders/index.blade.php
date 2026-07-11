@@ -30,7 +30,7 @@
         </div>
     </x-slot>
 
-    <div class="py-12 bg-gray-50/50 dark:bg-gray-950/20">
+    <div class="py-12 bg-gray-50/50 dark:bg-gray-955/20">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             {{-- Toast Notification --}}
@@ -62,25 +62,33 @@
                                 @forelse ($customOrders as $order)
                                     <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-all duration-150">
                                         <td class="px-6 py-5 font-mono text-sm font-bold text-gray-900 dark:text-white">
-                                            #ORD-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
+                                            @if($order->product_id)
+                                                #CUST-{{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }}
+                                            @else
+                                                #ORD-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
+                                            @endif
                                         </td>
                                         <td class="px-6 py-5">
                                             <span class="inline-flex px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider {{ $order->category === 'konveksi' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }}">
-                                                {{ $order->category }}
+                                                {{ $order->category ?? '-' }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-5 text-sm font-semibold text-gray-850 dark:text-gray-250">
-                                            @if($order->product === 'lainnya')
-                                                {{ $order->other_product_name }} <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Lainnya)</span>
+                                            @if($order->product_id)
+                                                {{ $order->product_relation->name ?? 'Custom Product' }}
                                             @else
-                                                {{ $order->product }}
+                                                @if($order->product === 'lainnya')
+                                                    {{ $order->other_product_name }} <span class="text-xs text-gray-400 dark:text-gray-500 font-normal">(Lainnya)</span>
+                                                @else
+                                                    {{ $order->product }}
+                                                @endif
                                             @endif
                                         </td>
                                         <td class="px-6 py-5 text-sm font-semibold">
                                             {{ number_format($order->quantity) }} <span class="text-xs text-gray-400 font-normal">Pcs</span>
                                         </td>
                                         <td class="px-6 py-5 text-sm text-gray-500 dark:text-gray-400 font-medium">
-                                            {{ $order->deadline->format('d M Y') }}
+                                            {{ $order->deadline ? $order->deadline->format('d M Y') : '-' }}
                                         </td>
                                         <td class="px-6 py-5">
                                             <span class="inline-flex px-3 py-1 rounded-xl text-xs font-semibold {{ $order->status_badge_classes }} shadow-sm">
@@ -93,7 +101,7 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                                 </svg>
-                                                Lacak Progress
+                                                Lihat Detail
                                             </a>
                                         </td>
                                     </tr>

@@ -15,6 +15,8 @@ Route::get('/', function () {
         ->take(8)
         ->get();
 
+    $allProducts = Product::query()->where('is_active', true)->get();
+
     $cart = session('cart', []);
     $cartProducts = collect();
     $cartCount = 0;
@@ -35,8 +37,9 @@ Route::get('/', function () {
     }
 
     $faqs = \App\Models\Faq::where('is_active', true)->orderBy('order')->get();
+    $allProducts = Product::query()->where('is_active', true)->get();
 
-    return view('beranda', compact('products', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal', 'faqs'));
+    return view('beranda', compact('products', 'allProducts', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal', 'faqs'));
 })->name('beranda');
 
 Route::get('/dashboard', function () {
@@ -59,6 +62,8 @@ Route::middleware('auth')->group(function () {
 
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    // Custom Orders (Merged - moved to end of auth block)
+
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
     // Orders (Riwayat Pesanan)
@@ -89,6 +94,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/custom-orders/export/csv', [\App\Http\Controllers\CustomOrderController::class, 'exportCsv'])->name('custom-orders.export');
     Route::post('/custom-orders/{customOrder}/approve-mockup', [\App\Http\Controllers\CustomOrderController::class, 'approveMockup'])->name('custom-orders.approve-mockup');
     Route::post('/custom-orders/{customOrder}/request-revision', [\App\Http\Controllers\CustomOrderController::class, 'requestRevision'])->name('custom-orders.request-revision');
+    Route::post('/custom-orders/{customOrder}/revisions', [\App\Http\Controllers\CustomOrderController::class, 'storeRevision'])->name('custom-orders.revisions.store');
+    Route::post('/custom-orders/{customOrder}/approve', [\App\Http\Controllers\CustomOrderController::class, 'approve'])->name('custom-orders.approve');
+    Route::get('/custom-orders/{customOrder}/checkout', [\App\Http\Controllers\CustomOrderController::class, 'checkout'])->name('custom-orders.checkout');
+    Route::post('/custom-orders/{customOrder}/checkout', [\App\Http\Controllers\CustomOrderController::class, 'processCheckout'])->name('custom-orders.process-checkout');
     Route::resource('custom-orders', \App\Http\Controllers\CustomOrderController::class)->only(['index', 'create', 'store', 'show']);
 });
 
