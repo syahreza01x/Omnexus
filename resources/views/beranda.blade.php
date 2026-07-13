@@ -565,6 +565,74 @@
         }
         .dark .review-quote { color: rgba(167,139,250,0.12); }
 
+        /* ─── FAQ cards ─── */
+        .faq-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dark .faq-card { background: var(--surface-2); }
+        .faq-card.is-open {
+            border-color: rgba(124,58,237,0.4);
+            box-shadow: 0 12px 30px rgba(124,58,237,0.08);
+        }
+        .dark .faq-card.is-open {
+            box-shadow: 0 12px 30px rgba(124,58,237,0.2);
+        }
+        
+        .faq-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: transparent;
+        }
+        .faq-header:hover {
+            background: rgba(124,58,237,0.03);
+        }
+        .faq-header.is-open {
+            background: rgba(124,58,237,0.04);
+        }
+        
+        .faq-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            padding-right: 20px;
+            transition: color 0.3s;
+        }
+        .faq-title.is-open {
+            color: #7c3aed;
+        }
+        .dark .faq-title.is-open {
+            color: #a78bfa;
+        }
+        
+        .faq-icon {
+            width: 36px; height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(124,58,237,0.08);
+            color: #7c3aed;
+        }
+        .dark .faq-icon {
+            background: rgba(124,58,237,0.15);
+            color: #a78bfa;
+        }
+        .faq-icon.is-open {
+            background: #7c3aed;
+            color: white;
+            transform: rotate(180deg);
+        }
+
         /* ─── Feedback form ─── */
         .form-input {
             width: 100%;
@@ -1311,9 +1379,9 @@
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                             <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden;">
-                                <div style="width: 72%; height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); border-radius: 99px;"></div>
+                                <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); border-radius: 99px;"></div>
                             </div>
-                            <span style="font-size: 0.72rem; color: #a78bfa; font-weight: 700;">72% Selesai</span>
+                            <span style="font-size: 0.72rem; color: #a78bfa; font-weight: 700;">100% Sesuai</span>
                         </div>
                     </div>
                 </div>
@@ -1575,6 +1643,80 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </section>
+
+    {{-- ─── FAQ Section ─── --}}
+    <section id="faq" style="padding: 100px 0; background: var(--surface-2);">
+        <div style="max-width: 800px; margin: 0 auto; padding: 0 24px;">
+            <div class="reveal" style="text-align: center; margin-bottom: 56px;">
+                <div class="section-label" style="margin: 0 auto 16px;">Bantuan</div>
+                <h2 class="section-title" style="color: var(--text);">Pertanyaan Umum</h2>
+                <p style="color: var(--muted); margin-top: 12px; font-size: 1rem;">Temukan jawaban atas pertanyaan yang sering diajukan</p>
+            </div>
+
+            <div class="reveal reveal-delay-1" x-data="{ openFaq: null }">
+                @php
+                    $faqs = [
+                        [
+                            'q' => 'Bagaimana cara melakukan custom order?',
+                            'a' => 'Anda bisa melakukan custom order dengan mengklik tombol "Custom Order" di halaman utama, pilih kategori produk, upload desain Anda (opsional), tentukan jumlah pesanan, dan isi detail lainnya. Tim kami akan segera menghubungi Anda untuk konfirmasi.'
+                        ],
+                        [
+                            'q' => 'Berapa lama waktu produksi pesanan custom?',
+                            'a' => 'Waktu produksi standar adalah 3–7 hari kerja tergantung jenis dan jumlah pesanan. Untuk pesanan dalam jumlah besar, waktu produksi dapat lebih lama. Kami akan menginformasikan estimasi waktu yang akurat setelah pesanan dikonfirmasi.'
+                        ],
+                        [
+                            'q' => 'Apakah ada minimum order untuk custom?',
+                            'a' => 'Untuk custom order, minimum pemesanan adalah 1 pcs. Namun, untuk pesanan dalam jumlah besar (di atas 50 pcs), Anda akan mendapatkan harga spesial yang lebih terjangkau.'
+                        ],
+                        [
+                            'q' => 'Metode pembayaran apa saja yang tersedia?',
+                            'a' => 'Kami menerima pembayaran melalui transfer bank (BCA & Mandiri). Setelah pesanan dibuat, Anda akan mendapatkan instruksi pembayaran lengkap. Pembayaran akan diverifikasi oleh admin kami.'
+                        ],
+                        [
+                            'q' => 'Bagaimana cara pengiriman pesanan?',
+                            'a' => 'Kami menyediakan dua pilihan: jemput di tempat (pickup) atau dikirim ke alamat Anda. Pengiriman tersedia ke seluruh wilayah Indonesia melalui jasa ekspedisi terpercaya.'
+                        ],
+                        [
+                            'q' => 'Apakah bisa revisi desain setelah order?',
+                            'a' => 'Ya, Anda bisa melakukan revisi desain sebelum proses produksi dimulai. Tim kami akan mengirimkan mockup desain terlebih dahulu untuk persetujuan Anda. Revisi gratis hingga 2 kali.'
+                        ],
+                    ];
+                @endphp
+
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    @foreach($faqs as $i => $faq)
+                        <div class="faq-card" :class="{ 'is-open': openFaq === {{ $i }} }">
+                            
+                            {{-- Clickable Header --}}
+                            <div class="faq-header" :class="{ 'is-open': openFaq === {{ $i }} }" @click="openFaq = openFaq === {{ $i }} ? null : {{ $i }}">
+                                
+                                <span class="faq-title" :class="{ 'is-open': openFaq === {{ $i }} }">{{ $faq['q'] }}</span>
+                                
+                                <div class="faq-icon" :class="{ 'is-open': openFaq === {{ $i }} }">
+                                    <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                                </div>
+                            </div>
+
+                            {{-- Answer Content --}}
+                            <div x-show="openFaq === {{ $i }}"
+                                 x-transition:enter="transition ease-out duration-300"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-4"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 x-transition:leave="transition ease-in duration-200"
+                                 x-transition:leave-start="opacity-100"
+                                 x-transition:leave-end="opacity-0"
+                                 style="display: none;">
+                                <div style="padding: 0 24px 28px;">
+                                    <div style="height: 1px; background: var(--border); margin-bottom: 20px; opacity: 0.5;"></div>
+                                    <p style="font-size: 0.95rem; color: var(--muted); line-height: 1.8; margin: 0;">{{ $faq['a'] }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </section>
 
