@@ -403,6 +403,110 @@
             margin: 0 10px;
         }
 
+        /* ─── Delivery Method Toggle ─── */
+        .method-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .method-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 22px 16px;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            background: var(--surface);
+        }
+        .dark .method-option {
+            background: var(--surface-2);
+        }
+        .method-option::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 120%, rgba(124,58,237,0.08) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .method-option:hover {
+            border-color: rgba(124,58,237,0.3);
+            transform: translateY(-2px);
+        }
+        .method-option:hover::before {
+            opacity: 1;
+        }
+        .method-option.selected {
+            border-color: #7c3aed;
+            background: rgba(124,58,237,0.04);
+            box-shadow: 0 4px 20px rgba(124,58,237,0.12);
+        }
+        .dark .method-option.selected {
+            background: rgba(124,58,237,0.1);
+            box-shadow: 0 4px 20px rgba(124,58,237,0.15);
+        }
+        .method-option.selected::before {
+            opacity: 1;
+        }
+        .method-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface-2);
+            color: var(--muted);
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        .method-option.selected .method-icon {
+            background: rgba(124,58,237,0.12);
+            color: #7c3aed;
+        }
+        .dark .method-option.selected .method-icon {
+            background: rgba(124,58,237,0.2);
+            color: #a78bfa;
+        }
+        .method-label {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text);
+            position: relative;
+            z-index: 1;
+        }
+        .method-desc {
+            font-size: 0.76rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.4;
+            position: relative;
+            z-index: 1;
+        }
+        .method-check {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #7c3aed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(0);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .method-option.selected .method-check {
+            transform: scale(1);
+        }
+
         /* ─── Info Banner ─── */
         .info-banner {
             display: flex;
@@ -419,6 +523,15 @@
             border-color: rgba(124,58,237,0.2);
         }
 
+        /* ─── Slide Transition ─── */
+        .slide-enter {
+            animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-12px); max-height: 0; }
+            to { opacity: 1; transform: translateY(0); max-height: 600px; }
+        }
+
         @keyframes fadeSlideUp {
             from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
@@ -429,6 +542,7 @@
         .animate-delay-1 { animation-delay: 0.1s; }
         .animate-delay-2 { animation-delay: 0.2s; }
         .animate-delay-3 { animation-delay: 0.3s; }
+        .animate-delay-4 { animation-delay: 0.4s; }
 
         /* ═══════ RESPONSIVE ═══════ */
         @media (max-width: 768px) {
@@ -447,6 +561,17 @@
             .summary-card {
                 padding: 20px;
                 border-radius: 16px;
+            }
+            .method-options {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .method-option {
+                padding: 16px 12px;
+            }
+            .method-icon {
+                width: 44px;
+                height: 44px;
             }
             .checkout-steps .step span {
                 display: none;
@@ -528,8 +653,12 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('checkout.store') }}" x-data="{ selectedAddress: {{ $addresses->where('is_default', true)->first()?->id ?? ($addresses->first()?->id ?? 'null') }} }">
+        <form method="POST" action="{{ route('checkout.store') }}" x-data="{
+            shippingMethod: 'pickup',
+            selectedAddress: {{ $addresses->where('is_default', true)->first()?->id ?? ($addresses->first()?->id ?? 'null') }}
+        }">
             @csrf
+            <input type="hidden" name="shipping_method" x-bind:value="shippingMethod">
 
             <div class="checkout-grid">
                 {{-- Left Column --}}
@@ -560,8 +689,55 @@
                         @endforeach
                     </div>
 
-                    {{-- Shipping Address --}}
+                    {{-- Delivery Method --}}
                     <div class="checkout-card animate-in animate-delay-2">
+                        <div class="card-title">
+                            <div class="card-title-icon">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-3.375c0-.621-.504-1.125-1.125-1.125h-3.527c-.392-.767-.893-1.484-1.498-2.127L13.5 8.25H7.5v5.25M3.75 14.25h3.75"/></svg>
+                            </div>
+                            Metode Pengambilan
+                        </div>
+
+                        <div class="method-options">
+                            {{-- Pickup Option --}}
+                            <div class="method-option"
+                                :class="{ 'selected': shippingMethod === 'pickup' }"
+                                @click="shippingMethod = 'pickup'">
+                                <div class="method-check">
+                                    <svg style="width: 12px; height: 12px; color: white;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                </div>
+                                <div class="method-icon">
+                                    <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.15c0 .415.336.75.75.75z"/></svg>
+                                </div>
+                                <span class="method-label">Jemput di Tempat</span>
+                                <span class="method-desc">Ambil langsung di toko kami</span>
+                            </div>
+
+                            {{-- Delivery Option --}}
+                            <div class="method-option"
+                                :class="{ 'selected': shippingMethod === 'delivery' }"
+                                @click="shippingMethod = 'delivery'">
+                                <div class="method-check">
+                                    <svg style="width: 12px; height: 12px; color: white;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                                </div>
+                                <div class="method-icon">
+                                    <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-3.375c0-.621-.504-1.125-1.125-1.125h-3.527c-.392-.767-.893-1.484-1.498-2.127L13.5 8.25H7.5v5.25M3.75 14.25h3.75"/></svg>
+                                </div>
+                                <span class="method-label">Dikirim</span>
+                                <span class="method-desc">Kirim ke alamat pilihan Anda</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Shipping Address (only shown when delivery is selected) --}}
+                    <div x-show="shippingMethod === 'delivery'"
+                         x-transition:enter="slide-enter"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         class="checkout-card animate-in animate-delay-3">
                         <div class="card-title">
                             <div class="card-title-icon">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
@@ -609,7 +785,7 @@
                     </div>
 
                     {{-- Notes --}}
-                    <div class="checkout-card animate-in animate-delay-3">
+                    <div class="checkout-card animate-in animate-delay-4">
                         <div class="card-title">
                             <div class="card-title-icon">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
@@ -635,6 +811,10 @@
                             <span class="summary-row-value">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-row-label">Pengambilan</span>
+                            <span style="font-size: 0.82rem; font-weight: 600; color: #10b981;" x-text="shippingMethod === 'pickup' ? 'Jemput di Tempat' : 'Dikirim'"></span>
+                        </div>
+                        <div class="summary-row" x-show="shippingMethod === 'delivery'">
                             <span class="summary-row-label">Ongkos Kirim</span>
                             <span style="font-size: 0.82rem; font-weight: 600; color: #10b981;">Dihitung kemudian</span>
                         </div>
@@ -644,7 +824,7 @@
                             <span class="summary-row-value">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                         </div>
 
-                        <button type="submit" class="btn-primary" style="margin-top: 20px;" {{ $addresses->count() === 0 ? 'disabled' : '' }}>
+                        <button type="submit" class="btn-primary" style="margin-top: 20px;" :disabled="shippingMethod === 'delivery' && {{ $addresses->count() }} === 0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             Buat Pesanan
                         </button>

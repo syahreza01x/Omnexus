@@ -58,14 +58,19 @@ class CheckoutController extends Controller
         }
 
         $validated = $request->validate([
-            'address_id' => ['required', 'exists:addresses,id'],
+            'shipping_method' => ['required', 'in:pickup,delivery'],
+            'address_id' => ['required_if:shipping_method,delivery', 'nullable', 'exists:addresses,id'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Verify address belongs to user
-        $address = Address::where('id', $validated['address_id'])
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $address = null;
+
+        if ($validated['shipping_method'] === 'delivery') {
+            // Verify address belongs to user
+            $address = Address::where('id', $validated['address_id'])
+                ->where('user_id', $request->user()->id)
+                ->firstOrFail();
+        }
 
         $cartProducts = Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
 
@@ -96,12 +101,13 @@ class CheckoutController extends Controller
                 'total_amount' => $totalAmount,
                 'status' => 'pending',
                 'notes' => $validated['notes'] ?? null,
-                'shipping_name' => $request->user()->name,
-                'shipping_phone' => $address->phone ?? $request->user()->phone,
-                'shipping_address' => $address->address_line,
-                'shipping_city' => $address->city,
-                'shipping_province' => $address->province,
-                'shipping_postal_code' => $address->postal_code,
+                'shipping_method' => $validated['shipping_method'],
+                'shipping_name' => $address ? $request->user()->name : null,
+                'shipping_phone' => $address ? ($address->phone ?? $request->user()->phone) : null,
+                'shipping_address' => $address?->address_line,
+                'shipping_city' => $address?->city,
+                'shipping_province' => $address?->province,
+                'shipping_postal_code' => $address?->postal_code,
             ]);
 
             // Create transaction items & reduce stock

@@ -17,6 +17,7 @@ class Transaction extends Model
         'total_amount',
         'status',
         'notes',
+        'shipping_method',
         'shipping_name',
         'shipping_phone',
         'shipping_address',

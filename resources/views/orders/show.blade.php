@@ -431,21 +431,31 @@
                         <div class="card-title-icon">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
                         </div>
-                        Alamat Pengiriman
+                        {{ $transaction->shipping_method === 'pickup' ? 'Metode Pengambilan' : 'Alamat Pengiriman' }}
                     </div>
 
-                    <div style="padding: 16px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);">
-                        @if($transaction->shipping_name)
-                            <p style="font-size: 0.92rem; font-weight: 700; color: var(--text); margin: 0 0 4px;">{{ $transaction->shipping_name }}</p>
-                        @endif
-                        @if($transaction->shipping_phone)
-                            <p style="font-size: 0.82rem; color: var(--muted); margin: 0 0 8px;">📞 {{ $transaction->shipping_phone }}</p>
-                        @endif
-                        <p style="font-size: 0.88rem; color: var(--text); margin: 0 0 4px; line-height: 1.5;">{{ $transaction->shipping_address }}</p>
-                        <p style="font-size: 0.85rem; color: var(--muted); margin: 0;">
-                            {{ $transaction->shipping_city }}, {{ $transaction->shipping_province }} {{ $transaction->shipping_postal_code }}
-                        </p>
-                    </div>
+                    @if($transaction->shipping_method === 'pickup')
+                        <div style="padding: 20px; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15); border-radius: 14px; text-align: center;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                                <svg style="width: 24px; height: 24px; color: #10b981;" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.15c0 .415.336.75.75.75z"/></svg>
+                            </div>
+                            <p style="font-size: 0.95rem; font-weight: 700; color: #10b981; margin: 0 0 4px;">Jemput di Tempat</p>
+                            <p style="font-size: 0.82rem; color: var(--muted); margin: 0;">Pesanan akan diambil langsung di toko</p>
+                        </div>
+                    @else
+                        <div style="padding: 16px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);">
+                            @if($transaction->shipping_name)
+                                <p style="font-size: 0.92rem; font-weight: 700; color: var(--text); margin: 0 0 4px;">{{ $transaction->shipping_name }}</p>
+                            @endif
+                            @if($transaction->shipping_phone)
+                                <p style="font-size: 0.82rem; color: var(--muted); margin: 0 0 8px;">📞 {{ $transaction->shipping_phone }}</p>
+                            @endif
+                            <p style="font-size: 0.88rem; color: var(--text); margin: 0 0 4px; line-height: 1.5;">{{ $transaction->shipping_address }}</p>
+                            <p style="font-size: 0.85rem; color: var(--muted); margin: 0;">
+                                {{ $transaction->shipping_city }}, {{ $transaction->shipping_province }} {{ $transaction->shipping_postal_code }}
+                            </p>
+                        </div>
+                    @endif
 
                     @if($transaction->notes)
                         <div style="margin-top: 16px; padding: 14px 16px; background: rgba(124,58,237,0.04); border: 1px solid rgba(124,58,237,0.1); border-radius: 12px;">
