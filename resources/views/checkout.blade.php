@@ -679,8 +679,13 @@
                                     <img src="{{ asset($item['product']->image_path ?: 'images/items/1.png') }}" alt="{{ $item['product']->name }}">
                                 </div>
                                 <div style="flex: 1; min-width: 0;">
-                                    <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $item['product']->name }}</h4>
-                                    <p style="font-size: 0.8rem; color: var(--muted); margin: 0 0 6px;">{{ $item['product']->category ?? 'Produk' }} · {{ $item['quantity'] }} × Rp {{ number_format($item['product']->price, 0, ',', '.') }}</p>
+                                    <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ $item['product']->name }}
+                                        @if(!empty($item['size']) && $item['product']->category !== 'Aksesoris')
+                                            <span style="font-size: 0.65rem; background: var(--border); padding: 2px 6px; border-radius: 6px; margin-left: 6px; vertical-align: middle;">Ukuran {{ $item['size'] }}</span>
+                                        @endif
+                                    </h4>
+                                    <p style="font-size: 0.8rem; color: var(--muted); margin: 0 0 6px;">{{ $item['product']->category ?? 'Produk' }} · {{ $item['quantity'] }} × Rp {{ number_format($item['subtotal'] / max(1, $item['quantity']), 0, ',', '.') }}</p>
                                 </div>
                                 <div style="text-align: right; flex-shrink: 0;">
                                     <span style="font-size: 0.95rem; font-weight: 800; color: var(--text);">Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</span>

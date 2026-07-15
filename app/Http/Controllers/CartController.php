@@ -13,6 +13,7 @@ class CartController extends Controller
         $validated = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'size' => ['nullable', 'string', 'in:S,M,L,XL,XXL'],
         ]);
 
         $product = Product::findOrFail($validated['product_id']);
@@ -21,13 +22,23 @@ class CartController extends Controller
             return back()->withErrors(['product_id' => 'Produk tidak aktif.']);
         }
 
+        $size = null;
+        if ($product->category !== 'Aksesoris') {
+            $size = $validated['size'] ?? 'S'; // Default to S if not provided
+        }
+
         $quantity = (int) ($validated['quantity'] ?? 1);
         $cart = $request->session()->get('cart', []);
-        $productId = (string) $product->id;
+        
+        $cartKey = (string) $product->id;
+        if ($size) {
+            $cartKey .= '_' . $size;
+        }
 
-        $cart[$productId] = [
+        $cart[$cartKey] = [
             'product_id' => $product->id,
-            'quantity' => (($cart[$productId]['quantity'] ?? 0) + $quantity),
+            'quantity' => (($cart[$cartKey]['quantity'] ?? 0) + $quantity),
+            'size' => $size,
         ];
 
         $request->session()->put('cart', $cart);
@@ -35,29 +46,28 @@ class CartController extends Controller
         return back()->with('success', 'Produk ditambahkan ke keranjang.');
     }
 
-    public function update(Request $request, Product $product): RedirectResponse
+    public function update(Request $request, string $cartKey): RedirectResponse
     {
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:99'],
         ]);
 
         $cart = $request->session()->get('cart', []);
-        $productId = (string) $product->id;
 
-        if (! array_key_exists($productId, $cart)) {
+        if (! array_key_exists($cartKey, $cart)) {
             return back()->withErrors(['product_id' => 'Produk tidak ditemukan di keranjang.']);
         }
 
-        $cart[$productId]['quantity'] = (int) $validated['quantity'];
+        $cart[$cartKey]['quantity'] = (int) $validated['quantity'];
         $request->session()->put('cart', $cart);
 
         return back()->with('success', 'Jumlah produk diperbarui.');
     }
 
-    public function remove(Request $request, Product $product): RedirectResponse
+    public function remove(Request $request, string $cartKey): RedirectResponse
     {
         $cart = $request->session()->get('cart', []);
-        unset($cart[(string) $product->id]);
+        unset($cart[$cartKey]);
 
         $request->session()->put('cart', $cart);
 

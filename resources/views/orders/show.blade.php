@@ -403,7 +403,12 @@
                                 <img src="{{ asset($item->product?->image_path ?: 'images/items/1.png') }}" alt="{{ $item->product?->name }}">
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 4px;">{{ $item->product?->name ?? 'Produk dihapus' }}</h4>
+                                <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text); margin: 0 0 4px;">
+                                    {{ $item->product?->name ?? 'Produk dihapus' }}
+                                    @if($item->size)
+                                        <span style="font-size: 0.65rem; background: var(--border); padding: 2px 6px; border-radius: 6px; margin-left: 6px; vertical-align: middle;">Ukuran {{ $item->size }}</span>
+                                    @endif
+                                </h4>
                                 <p style="font-size: 0.82rem; color: var(--muted); margin: 0;">
                                     {{ $item->quantity }} × Rp {{ number_format($item->unit_price, 0, ',', '.') }}
                                 </p>

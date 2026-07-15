@@ -23,21 +23,68 @@ Route::get('/', function () {
     $cartSubtotal = 0;
 
     if (! empty($cart)) {
-        $cartProducts = Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
+        $productIds = collect($cart)->pluck('product_id')->unique()->toArray();
+        $cartProducts = Product::whereIn('id', $productIds)->get()->keyBy('id');
         $cartCount = collect($cart)->sum('quantity');
-        $cartSubtotal = collect($cart)->reduce(function ($carry, $item, $productId) use ($cartProducts) {
-            $product = $cartProducts->get((int) $productId);
-
-            if (! $product) {
-                return $carry;
+        $cartSubtotal = collect($cart)->reduce(function ($carry, $item) use ($cartProducts) {
+            $product = $cartProducts->get((int) $item['product_id']);
+            if (! $product) return $carry;
+            
+            $price = (int) $product->price;
+            $size = $item['size'] ?? null;
+            if ($size && $product->category !== 'Aksesoris') {
+                if ($size === 'M') $price += 5000;
+                elseif ($size === 'L') $price += 10000;
+                elseif ($size === 'XL') $price += 20000;
+                elseif ($size === 'XXL') $price += 30000;
             }
-
-            return $carry + ((int) $item['quantity'] * (int) $product->price);
+            
+            return $carry + ((int) $item['quantity'] * $price);
         }, 0);
     }
 
     return view('beranda', compact('products', 'allProducts', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal'));
 })->name('beranda');
+
+Route::get('/products', function (\Illuminate\Http\Request $request) {
+    $query = Product::query()->where('is_active', true);
+    
+    $category = $request->query('category');
+    if ($category) {
+        $query->where('category', $category);
+    }
+    
+    $products = $query->latest()->get();
+    $categories = Product::query()->where('is_active', true)->select('category')->distinct()->pluck('category')->sort()->values();
+    
+    $cart = session('cart', []);
+    $cartProducts = collect();
+    $cartCount = 0;
+    $cartSubtotal = 0;
+
+    if (! empty($cart)) {
+        $productIds = collect($cart)->pluck('product_id')->unique()->toArray();
+        $cartProducts = Product::whereIn('id', $productIds)->get()->keyBy('id');
+        $cartCount = collect($cart)->sum('quantity');
+        $cartSubtotal = collect($cart)->reduce(function ($carry, $item) use ($cartProducts) {
+            $product = $cartProducts->get((int) $item['product_id']);
+            if (! $product) return $carry;
+            
+            $price = (int) $product->price;
+            $size = $item['size'] ?? null;
+            if ($size && $product->category !== 'Aksesoris') {
+                if ($size === 'M') $price += 5000;
+                elseif ($size === 'L') $price += 10000;
+                elseif ($size === 'XL') $price += 20000;
+                elseif ($size === 'XXL') $price += 30000;
+            }
+            
+            return $carry + ((int) $item['quantity'] * $price);
+        }, 0);
+    }
+
+    return view('products.index', compact('products', 'categories', 'category', 'cart', 'cartProducts', 'cartCount', 'cartSubtotal'));
+})->name('products.index');
 
 Route::get('/dashboard', function () {
     return redirect()->route('beranda');
@@ -45,8 +92,8 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
-    Route::patch('/cart/{product}', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/{product}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::patch('/cart/{cartKey}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{cartKey}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
     // Checkout

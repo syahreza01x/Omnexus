@@ -7,8 +7,20 @@
     selectedProduct: null,
     navScrolled: false,
     modalQty: 1,
+    modalSize: 'S',
     formatRp(amount) {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+    },
+    get currentModalPrice() {
+        if (!this.selectedProduct) return 0;
+        let price = this.selectedProduct.price;
+        if (this.selectedProduct.category !== 'Aksesoris') {
+            if (this.modalSize === 'M') price += 5000;
+            else if (this.modalSize === 'L') price += 10000;
+            else if (this.modalSize === 'XL') price += 20000;
+            else if (this.modalSize === 'XXL') price += 30000;
+        }
+        return price;
     },
     cartItems: window.initialCartItems || [],
     get cartSubtotal() {
@@ -17,8 +29,8 @@
     get currentCartCount() {
         return this.cartItems.reduce((sum, item) => sum + parseInt(item.qty), 0);
     },
-    updateCartAjax(productId, qty) {
-        fetch(`/cart/${productId}`, {
+    updateCartAjax(cartKey, qty) {
+        fetch(`/cart/${cartKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' },
             body: JSON.stringify({ _method: 'PATCH', quantity: qty })
@@ -30,9 +42,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script>
-        window.initialCartItems = {!! \Illuminate\Support\Js::from(collect($cart ?? [])->map(function($i) use ($cartProducts) {
+        window.initialCartItems = {!! \Illuminate\Support\Js::from(collect($cart ?? [])->map(function($i, $key) use ($cartProducts) {
             $p = isset($i['product_id']) ? $cartProducts->get((int)$i['product_id']) : null;
-            return $p ? ['id' => $p->id, 'qty' => (int)$i['quantity'], 'price' => (float)$p->price] : null;
+            if (!$p) return null;
+            $price = (int) $p->price;
+            $size = $i['size'] ?? null;
+            if ($size && $p->category !== 'Aksesoris') {
+                if ($size === 'M') $price += 5000;
+                elseif ($size === 'L') $price += 10000;
+                elseif ($size === 'XL') $price += 20000;
+                elseif ($size === 'XXL') $price += 30000;
+            }
+            return ['id' => (string)$key, 'qty' => (int)$i['quantity'], 'price' => $price, 'size' => $size];
         })->filter()->values()) !!};
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -867,7 +888,7 @@
         /* ─── Responsive: Category grid ─── */
         .category-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 16px;
         }
         /* ─── Responsive: Product grid ─── */
@@ -1405,16 +1426,17 @@
             </div>
             <div class="category-grid reveal reveal-delay-1">
                 @php
-                    $categories = [
-                        ['name' => 'Aksesoris', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>'],
-                        ['name' => 'Pakaian', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M8 3l-5 4 2 2 2-1v12a1 1 0 001 1h8a1 1 0 001-1V8l2 1 2-2-5-4-1.5 2h-5L8 3z"/>'],
-                        ['name' => 'Outer', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 3L4 7l1.5 1.5L7 7.5V20a1 1 0 001 1h3v-6h2v6h3a1 1 0 001-1V7.5l1.5 1L20 7l-5-4h-1l-1 2h-2L9 3z"/>'],
-                        ['name' => 'Kemeja', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7 3l-4 4 3 2V20a1 1 0 001 1h10a1 1 0 001-1V9l3-2-4-4-2 3h-6L7 3zM10 3v4l2 1 2-1V3"/>'],
-                        ['name' => 'Rompi', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 3l-2 3v14a1 1 0 001 1h8a1 1 0 001-1V6l-2-3h-6zM9 3c0 2 1.5 3 3 3s3-1 3-3"/>'],
+                    $categoryList = [
+                        ['name' => 'Kaos', 'slug' => 'Kaos', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M8 3l-5 4 2 2 2-1v12a1 1 0 001 1h8a1 1 0 001-1V8l2 1 2-2-5-4-1.5 2h-5L8 3z"/>'],
+                        ['name' => 'Polo', 'slug' => 'Polo', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M7 3l-4 4 3 2V20a1 1 0 001 1h10a1 1 0 001-1V9l3-2-4-4-2 3h-6L7 3zM10 3v4l2 1 2-1V3"/>'],
+                        ['name' => 'Seragam', 'slug' => 'Seragam', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 3L4 7l1.5 1.5L7 7.5V20a1 1 0 001 1h3v-6h2v6h3a1 1 0 001-1V7.5l1.5 1L20 7l-5-4h-1l-1 2h-2L9 3z"/>'],
+                        ['name' => 'Jaket', 'slug' => 'Jaket', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 3l-2 3v14a1 1 0 001 1h8a1 1 0 001-1V6l-2-3h-6zM9 3c0 2 1.5 3 3 3s3-1 3-3"/>'],
+                        ['name' => 'Aksesoris', 'slug' => 'Aksesoris', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>'],
+                        ['name' => 'Jersey', 'slug' => 'Jersey', 'icon' => '<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.5L7.5 3l4.5 1.5L16.5 3l3.75 1.5v15L16.5 21l-4.5-1.5L7.5 21l-3.75-1.5v-15z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15"/>'],
                     ];
                 @endphp
-                @foreach($categories as $cat)
-                    <a href="#" class="category-card">
+                @foreach($categoryList as $cat)
+                    <a href="{{ route('products.index', ['category' => $cat['slug']]) }}" class="category-card">
                         <div class="category-icon">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                 {!! $cat['icon'] !!}
@@ -1436,7 +1458,7 @@
                     <h2 class="section-title" style="color: var(--text);">Produk Custom Pilihan</h2>
                     <p style="color: var(--muted); margin-top: 8px; font-size: 0.95rem;">Inspirasi desain dari pesanan pelanggan kami</p>
                 </div>
-                <a href="#" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #7c3aed; text-decoration: none; transition: gap 0.2s;" onmouseover="this.style.gap='10px'" onmouseout="this.style.gap='6px'">
+                <a href="{{ route('products.index') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: #7c3aed; text-decoration: none; transition: gap 0.2s;" onmouseover="this.style.gap='10px'" onmouseout="this.style.gap='6px'">
                     Lihat Semua
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </a>
@@ -1761,7 +1783,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
                         <div style="padding: 16px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);">
                             <div style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Harga</div>
-                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text);" x-text="formatRp((selectedProduct?.price || 0) * modalQty)"></div>
+                            <div style="font-size: 1.2rem; font-weight: 800; color: var(--text);" x-text="formatRp(currentModalPrice * modalQty)"></div>
                         </div>
                         <div style="padding: 16px; background: var(--surface-2); border-radius: 14px; border: 1px solid var(--border);">
                             <div style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;">Satuan</div>
@@ -1778,7 +1800,23 @@
                     <form method="POST" action="{{ route('cart.add') }}">
                         @csrf
                         <input type="hidden" name="product_id" x-bind:value="selectedProduct?.id">
-                        <div style="display: flex; gap: 12px; align-items: flex-end;">
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <template x-if="selectedProduct?.category !== 'Aksesoris'">
+                                <div>
+                                    <label style="display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px;">Ukuran</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <template x-for="s in ['S', 'M', 'L', 'XL', 'XXL']" :key="s">
+                                            <button type="button" @click="modalSize = s"
+                                                class="flex-1 py-2.5 flex items-center justify-center rounded-xl text-[0.95rem] font-bold cursor-pointer transition-all duration-200 border"
+                                                :class="modalSize === s ? 'border-violet-600 bg-violet-600 text-white shadow-[0_4px_12px_rgba(124,58,237,0.3)]' : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)] hover:border-violet-600 hover:text-violet-600'"
+                                                x-text="s">
+                                            </button>
+                                        </template>
+                                    </div>
+                                    <input type="hidden" name="size" x-bind:value="modalSize">
+                                </div>
+                            </template>
+                            <div style="display: flex; gap: 12px; align-items: flex-end;">
                             <div>
                                 <label style="display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px;">Qty</label>
                                 <input type="number" name="quantity" min="1" value="1" x-model.number="modalQty"
@@ -1793,6 +1831,7 @@
                                 Masukkan ke Keranjang
                             </button>
                         </div>
+                    </div>
                     </form>
                     @else
                     {{-- Guest: redirect ke login --}}
@@ -1854,8 +1893,20 @@
 
             {{-- Items --}}
             <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px;">
-                @forelse($cart as $cartItem)
-                    @php $cartProduct = $cartProducts->get((int) $cartItem['product_id']); @endphp
+                @forelse($cart as $cartKey => $cartItem)
+                    @php 
+                        $cartProduct = $cartProducts->get((int) $cartItem['product_id']); 
+                        if ($cartProduct) {
+                            $price = (int) $cartProduct->price;
+                            $size = $cartItem['size'] ?? null;
+                            if ($size && $cartProduct->category !== 'Aksesoris') {
+                                if ($size === 'M') $price += 5000;
+                                elseif ($size === 'L') $price += 10000;
+                                elseif ($size === 'XL') $price += 20000;
+                                elseif ($size === 'XXL') $price += 30000;
+                            }
+                        }
+                    @endphp
                     @if($cartProduct)
                         <div class="cart-item">
                             <div style="display: flex; gap: 14px;">
@@ -1865,18 +1916,23 @@
                                         style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
                                 <div style="flex: 1; min-width: 0;">
-                                    <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $cartProduct->name }}</h4>
-                                    <p style="font-size: 0.8rem; font-weight: 600; color: #7c3aed; margin: 4px 0 12px;">Rp {{ number_format($cartProduct->price, 0, ',', '.') }}</p>
+                                    <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        {{ $cartProduct->name }} 
+                                        @if($size && $cartProduct->category !== 'Aksesoris')
+                                            <span style="font-size: 0.65rem; background: var(--border); padding: 2px 6px; border-radius: 6px; margin-left: 6px; vertical-align: middle;">Ukuran {{ $size }}</span>
+                                        @endif
+                                    </h4>
+                                    <p style="font-size: 0.8rem; font-weight: 600; color: #7c3aed; margin: 4px 0 12px;">Rp {{ number_format($price, 0, ',', '.') }}</p>
                                     <div style="display: flex; align-items: center; gap: 8px;">
-                                        <form method="POST" action="{{ route('cart.update', $cartProduct) }}" style="display: flex; align-items: center; gap: 8px;">
+                                        <form method="POST" action="{{ route('cart.update', $cartKey) }}" style="display: flex; align-items: center; gap: 8px;">
                                             @csrf
                                             @method('PATCH')
-                                    <div x-data="{ item: cartItems.find(i => i.id === {{ $cartProduct->id }}) }">
+                                    <div x-data="{ item: cartItems.find(i => i.id === '{{ $cartKey }}') }">
                                         <input type="number" name="quantity" min="1" x-model.number="item.qty" @change="updateCartAjax(item.id, item.qty)"
                                             style="width: 60px; padding: 6px 10px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.82rem; font-weight: 600; outline: none; text-align: center;">
                                     </div>
                                         </form>
-                                        <form method="POST" action="{{ route('cart.remove', $cartProduct) }}">
+                                        <form method="POST" action="{{ route('cart.remove', $cartKey) }}">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"

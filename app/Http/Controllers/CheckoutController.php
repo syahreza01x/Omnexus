@@ -25,18 +25,29 @@ class CheckoutController extends Controller
             return redirect()->route('beranda')->with('error', 'Keranjang belanja kosong.');
         }
 
-        $cartProducts = Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
+        $productIds = collect($cart)->pluck('product_id')->unique()->toArray();
+        $cartProducts = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
-        $cartItems = collect($cart)->map(function ($item, $productId) use ($cartProducts) {
-            $product = $cartProducts->get((int) $productId);
+        $cartItems = collect($cart)->map(function ($item, $cartKey) use ($cartProducts) {
+            $product = $cartProducts->get((int) $item['product_id']);
             if (! $product) {
                 return null;
+            }
+
+            $price = (int) $product->price;
+            $size = $item['size'] ?? null;
+            if ($size && $product->category !== 'Aksesoris') {
+                if ($size === 'M') $price += 5000;
+                elseif ($size === 'L') $price += 10000;
+                elseif ($size === 'XL') $price += 20000;
+                elseif ($size === 'XXL') $price += 30000;
             }
 
             return [
                 'product' => $product,
                 'quantity' => (int) $item['quantity'],
-                'subtotal' => (int) $item['quantity'] * (int) $product->price,
+                'size' => $size,
+                'subtotal' => (int) $item['quantity'] * $price,
             ];
         })->filter();
 
@@ -72,11 +83,12 @@ class CheckoutController extends Controller
                 ->firstOrFail();
         }
 
-        $cartProducts = Product::whereIn('id', array_keys($cart))->get()->keyBy('id');
+        $productIds = collect($cart)->pluck('product_id')->unique()->toArray();
+        $cartProducts = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
         // Validate stock availability
-        foreach ($cart as $productId => $item) {
-            $product = $cartProducts->get((int) $productId);
+        foreach ($cart as $cartKey => $item) {
+            $product = $cartProducts->get((int) $item['product_id']);
 
             if (! $product || ! $product->is_active) {
                 return back()->withErrors(['cart' => "Produk \"{$product?->name}\" tidak tersedia lagi."]);
@@ -88,9 +100,19 @@ class CheckoutController extends Controller
         }
 
         // Calculate total
-        $totalAmount = collect($cart)->reduce(function ($carry, $item, $productId) use ($cartProducts) {
-            $product = $cartProducts->get((int) $productId);
-            return $carry + ((int) $item['quantity'] * (int) $product->price);
+        $totalAmount = collect($cart)->reduce(function ($carry, $item, $cartKey) use ($cartProducts) {
+            $product = $cartProducts->get((int) $item['product_id']);
+            
+            $price = (int) $product->price;
+            $size = $item['size'] ?? null;
+            if ($size && $product->category !== 'Aksesoris') {
+                if ($size === 'M') $price += 5000;
+                elseif ($size === 'L') $price += 10000;
+                elseif ($size === 'XL') $price += 20000;
+                elseif ($size === 'XXL') $price += 30000;
+            }
+            
+            return $carry + ((int) $item['quantity'] * $price);
         }, 0);
 
         // Create transaction within a DB transaction
@@ -111,15 +133,26 @@ class CheckoutController extends Controller
             ]);
 
             // Create transaction items & reduce stock
-            foreach ($cart as $productId => $item) {
-                $product = $cartProducts->get((int) $productId);
+            foreach ($cart as $cartKey => $item) {
+                $product = $cartProducts->get((int) $item['product_id']);
                 $quantity = (int) $item['quantity'];
-                $unitPrice = (int) $product->price;
+                
+                $price = (int) $product->price;
+                $size = $item['size'] ?? null;
+                if ($size && $product->category !== 'Aksesoris') {
+                    if ($size === 'M') $price += 5000;
+                    elseif ($size === 'L') $price += 10000;
+                    elseif ($size === 'XL') $price += 20000;
+                    elseif ($size === 'XXL') $price += 30000;
+                }
+                
+                $unitPrice = $price;
                 $subtotal = $quantity * $unitPrice;
 
                 TransactionItem::create([
                     'transaction_id' => $transaction->id,
                     'product_id' => $product->id,
+                    'size' => $size,
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'subtotal' => $subtotal,
